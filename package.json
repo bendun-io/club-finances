@@ -1,0 +1,33 @@
+{
+  "name": "club-finances",
+  "version": "1.0.0",
+  "description": "App to manage club finance based on the data managed in the Peepl software.\r The app is based on Electron.",
+  "main": "main.js",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/bendun-io/club-finances.git"
+  },
+  "author": "Fabian Bendun",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/bendun-io/club-finances/issues"
+  },
+  "homepage": "https://github.com/bendun-io/club-finances#readme",
+  "devDependencies": {
+    "@electron-forge/cli": "^7.1.0",
+    "@electron-forge/maker-deb": "^7.1.0",
+    "@electron-forge/maker-rpm": "^7.1.0",
+    "@electron-forge/maker-squirrel": "^7.1.0",
+    "@electron-forge/maker-zip": "^7.1.0",
+    "@electron-forge/plugin-auto-unpack-natives": "^7.1.0",
+    "electron": "^27.1.2"
+  },
+  "scripts": {
+    "start": "electron-forge start",
+    "package": "electron-forge package",
+    "make": "electron-forge make"
+  },
+  "dependencies": {
+    "electron-squirrel-startup": "^1.0.0"
+  }
+}

@@ -14,7 +14,7 @@
 .sidebar a {
     padding: 8px 8px 8px 32px;
     text-decoration: none;
-    font-size: 25px;
+    font-size: 16px;
     color: #818181;
     display: block;
     transition: 0.3s;
@@ -52,9 +52,10 @@
 }
 
 #content {
+    top: 0;
     left: 20%;
     right: 0;
-    padding: 1px 16px;
+    padding: 0px 16px;
     height: 100%;
     position: absolute;
 }

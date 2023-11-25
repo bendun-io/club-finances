@@ -1,0 +1,30 @@
+<h1>Sammel&uuml;berweisung aus Excel</h1>
+
+<div>
+    <input type="file" id="excelFile" accept=".xls,.xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel" />
+</div>
+
+<div id="excelTableData" style="padding-top: 10px; padding-bottom: 5em;">
+    <div id="noExcelFileSelected">Wähle eine Excel Datei!
+        <a href="assets/template.xlsx" download>Vorlage</a>
+    </div>
+    <div id="loadingFile" style="display: none;">
+        Lade Datei... <i class="fas fa-spinner fa-spin"></i>
+    </div>
+    <div id="selectedExcelFile" style="display: none;">
+        <table id="excelTable">
+            <tr>
+                <th>ID</th>
+                <th>IBAN</th>
+                <th>BIC</th>
+                <th>Empfänger</th>
+                <th>Verwendungszweck</th>
+                <th>Betrag</th>
+                <th>Aktion</th>
+            </tr>
+        </table>
+        <div>
+            <input type="button" id="createSepaFileButton" value="SEPA XML erstellen" />
+        </div>
+    </div>
+</div>

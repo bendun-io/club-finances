@@ -1,4 +1,6 @@
 const { app, BrowserWindow, ipcMain } = require('electron')
+const { saveSettings, loadSettings } = require('./js/settings')
+const { loadExcelFile } = require('./js/excel')
 const path = require('node:path')
 
 const createWindow = () => {
@@ -15,7 +17,10 @@ const createWindow = () => {
   }
 
   app.whenReady().then(() => {
-    ipcMain.handle('ping', () => 'pong')
+    ipcMain.handle('saveSettings', (_event, settings) => saveSettings(settings));
+    ipcMain.handle('loadSettings', () => loadSettings());
+    ipcMain.handle('loadExcelFile', (_event, path) => loadExcelFile(path));
+    // ipcMain.handle('saveSettings', () => "saveSettings({})");
 
     createWindow()
 

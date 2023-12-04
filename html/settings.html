@@ -1,7 +1,18 @@
 <h1>Settings</h1>
 
-<form>
-    <input type="text" name="username" placeholder="Username" />
-    <input type="password" name="password" placeholder="Password" />
+<form id="settingsform">
+    <fieldset>
+        <legend>Account Settings</legend>
+        <input type="text" name="username" placeholder="Username" />
+        <input type="password" name="password" placeholder="Password" />
+    </fieldset>
+
+    <fieldset id="bankdetails">
+        <legend>Bank Details</legend>
+    </fieldset>
+    <div style="margin-bottom: 1.5em;">
+        <input type="button" value="Add one more bank account" id="addBankDetailsButton" />
+    </div>
+
     <input type="button" value="Save" onClick="onSaveSettingsClick()" id="saveSettingsButton" />
 </form>

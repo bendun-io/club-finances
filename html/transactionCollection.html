@@ -1,11 +1,20 @@
 <h1>Sammel&uuml;berweisung aus Excel</h1>
 
-<div>
-    <input type="file" id="excelFile" accept=".xls,.xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel" />
+<div id="bankAccountSelection" style="padding-top: 10px; padding-bottom: 1em;">
+    <div>
+        <label for="bankAccount">Bankkonto:</label>
+        <select id="bankAccount">            
+        </select>
+    </div>
+    <div id="noBankAccountSelected" style="display: none;">Wähle ein Bankkonto!</div>
 </div>
 
 <div id="excelTableData" style="padding-top: 10px; padding-bottom: 5em;">
-    <div id="noExcelFileSelected">Wähle eine Excel Datei!
+    <div>
+        <input type="file" id="excelFile" accept=".xls,.xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel" />
+    </div>
+
+    <div id="noExcelFileSelected" style="display: none;">Wähle eine Excel Datei!
         <a href="assets/template.xlsx" download>Vorlage</a>
     </div>
     <div id="loadingFile" style="display: none;">

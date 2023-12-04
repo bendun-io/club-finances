@@ -61,8 +61,17 @@ const onSaveSettingsClick = async function () {
     var password = document.querySelector('input[name="password"]').value.toString();
     var settings = {
         username: username,
-        password: password
+        password: password,
+        bankDetails: []
     };
+    
+    for(let bankDetails of document.querySelectorAll('.bankDetails')) {
+        settings.bankDetails.push({
+            accountName: bankDetails.querySelector('input[name="accountName"]').value.toString(),
+            iban: bankDetails.querySelector('input[name="iban"]').value.toString(),
+            bic: bankDetails.querySelector('input[name="bic"]').value.toString(),
+        });
+    }
 
     const response = await window.storage.saveSettings(settings);
     // console.log(response); // reponse indicates error/success

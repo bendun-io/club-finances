@@ -82,7 +82,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: mac
-          path: out/make/zip
+          path: out/make/zip/darwin/x64
 
   build-windows:
     runs-on: windows-latest
@@ -111,6 +111,8 @@ jobs:
   publish:
     runs-on: ubuntu-latest
     needs: [build-linux, build-mac, build-windows]
+    env:
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -133,7 +135,7 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: mac
-          path: out/make/deb/x64
+          path: out/make/zip/darwin/x64
 
       - name: Load windows artifact
         uses: actions/download-artifact@v4

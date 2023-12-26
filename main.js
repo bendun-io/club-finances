@@ -9,7 +9,8 @@ const createWindow = () => {
       height: 1080*0.8,
       webPreferences: {
         preload: path.join(__dirname, 'preload.js')
-      }
+      },
+      icon: path.join(__dirname, 'images', 'icon.png')
     })
   
     win.loadFile('index.html')

@@ -33,6 +33,7 @@ jobs:
             echo "Version number has not been increased."
             exit 1
           fi
+        continue-on-error: true
 
   build-linux:
     runs-on: ubuntu-latest

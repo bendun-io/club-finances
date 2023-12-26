@@ -1,3 +1,5 @@
+require('update-electron-app')()
+
 const { app, BrowserWindow, ipcMain } = require('electron')
 const { saveSettings, loadSettings } = require('./js/settings')
 const { loadExcelFile } = require('./js/excel')

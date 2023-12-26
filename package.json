@@ -31,6 +31,7 @@
   },
   "dependencies": {
     "electron-squirrel-startup": "^1.0.0",
-    "exceljs": "^4.4.0"
+    "exceljs": "^4.4.0",
+    "update-electron-app": "^3.0.0"
   }
 }

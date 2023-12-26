@@ -76,15 +76,13 @@ jobs:
       - name: Build
         run: |
           npm run make
-          ls -la out/make
-          find out/make -name "*.dmg"
-          find out/make -name "*.app"
+          ls -la out/make/zip
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
           name: mac
-          path: out/make/deb/x64
+          path: out/make/zip
 
   build-windows:
     runs-on: windows-latest

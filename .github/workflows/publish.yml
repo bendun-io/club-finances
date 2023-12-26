@@ -1,0 +1,42 @@
+name: Publish new version
+
+on:
+  push:
+    branches:
+      - main
+jobs:
+  check-version-bump:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 2  # fetch the last two commits to compare
+
+      - name: Use Node.js
+        uses: actions/setup-node@v2
+        with:
+          node-version: '14'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Check for version bump
+        run: |
+          # Get the version from package.json
+          NEW_VERSION=$(node -p "require('./package.json').version")
+          # Get the version from the previous commit
+          git checkout HEAD^
+          OLD_VERSION=$(node -p "require('./package.json').version")
+          # Compare the versions
+          if [[ "$NEW_VERSION" == "$OLD_VERSION" ]]; then
+            echo "Version number has not been increased."
+            exit 1
+          fi
+
+  build-linux:
+    runs-on: ubuntu-latest
+    needs: check-version-bump
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4

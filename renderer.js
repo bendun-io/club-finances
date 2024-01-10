@@ -2,6 +2,7 @@ const navigationMap = {
     "Home": "html/home.html",
     "Settings": "html/settings.html",
     "TransactionCollection": "html/transactionCollection.html",
+    "Bills": "html/bills.html",
 }
 
 const initLoadedPage = (filename) => {

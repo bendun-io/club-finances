@@ -7,4 +7,5 @@ contextBridge.exposeInMainWorld('storage', {
   saveSettings: (settings) => ipcRenderer.invoke('saveSettings', settings),
   loadSettings: () => ipcRenderer.invoke('loadSettings'),
   loadExcelFile: (path) => ipcRenderer.invoke('loadExcelFile', path),
+  createBillFolder: () => ipcRenderer.invoke('createBillFolder')
 })

@@ -1,4 +1,5 @@
-require('update-electron-app')()
+const updater = require('update-electron-app')
+updater()
 
 const { app, BrowserWindow, ipcMain } = require('electron')
 const { saveSettings, loadSettings } = require('./js/settings')

@@ -4,9 +4,63 @@ on:
   push:
     branches:
       - main
+
 jobs:
+  sast-scan-semgrep:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Install Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+      
+      - name: Install dependencies
+        run: |
+          pip install semgrep
+          pip install semgrep-sarif
+          pip install semgrep-sarif --upgrade
+
+      - name: Run SAST scan
+        run: |
+          semgrep --json --config=p/javascript --exclude=**/node_modules/** | tee semgrep-results.json
+
+      - name: Upload SAST scan results
+        uses: actions/upload-artifact@v4
+        with:
+          name: sast-scan
+          path: semgrep-results.json
+
+  sca-scan-retirejs:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Use Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install dependencies
+        run: |
+          npm install
+          npm install -g retire
+
+      - name: Run SAST scan
+        run: retire -v --outputformat json --outputpath retire.json --path .
+
+      - name: Upload SAST scan results
+        uses: actions/upload-artifact@v4
+        with:
+          name: sast-scan
+          path: retire.json
+
   check-version-bump:
     runs-on: ubuntu-latest
+    needs: [sca-scan-retirejs, sast-scan-semgrep]
     steps:
       - name: Checkout code
         uses: actions/checkout@v4

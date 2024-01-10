@@ -20,8 +20,7 @@ jobs:
       - name: Install dependencies
         run: |
           pip install semgrep
-          pip install semgrep-sarif
-          pip install semgrep-sarif --upgrade
+          semgrep --version
 
       - name: Run SAST scan
         run: |

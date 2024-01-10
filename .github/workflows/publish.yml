@@ -75,32 +75,18 @@ jobs:
       # - name: Install dependencies
       #   run: npm ci
 
-      - name: Install GitHub CLI
-        run: |
-          sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-key C99B11DEB97541F0
-          sudo apt-add-repository https://cli.github.com/packages
-          sudo apt update
-          sudo apt install gh
-
       - name: Check for version bump
         run: |
           # Get the version from package.json
           NEW_VERSION=$(node -p "require('./package.json').version")
-          if gh release view v$NEW_VERSION; then
-            echo "Release with version $NEW_VERSION already exists."
+          # Get the version from the previous commit
+          git checkout HEAD^
+          OLD_VERSION=$(node -p "require('./package.json').version")
+          # Compare the versions
+          if [[ "$NEW_VERSION" == "$OLD_VERSION" ]]; then
+            echo "Version number has not been increased."
             exit 1
           fi
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        
-          # # Get the version from the previous commit
-          # git checkout HEAD^
-          # OLD_VERSION=$(node -p "require('./package.json').version")
-          # # Compare the versions
-          # if [[ "$NEW_VERSION" == "$OLD_VERSION" ]]; then
-          #   echo "Version number has not been increased."
-          #   exit 1
-          # fi
 
   build-linux:
     runs-on: ubuntu-latest

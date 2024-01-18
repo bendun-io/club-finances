@@ -1,6 +1,6 @@
 {
   "name": "club-finances",
-  "version": "1.0.6",
+  "version": "1.0.7",
   "description": "App to manage club finance based on the data managed in the Peepl software.\r The app is based on Electron.",
   "main": "main.js",
   "repository": {

@@ -1,5 +1,6 @@
 node_modules/
 out/
 set-token.ps1
+testdata/
 
 retire.json

@@ -38,4 +38,17 @@ const storeBillData = (folderPath, billData) => {
     fs.writeFileSync(billDataPath, JSON.stringify(billData, null, 2));
 }
 
-module.exports = { createBillFolder, storeBillData };
+const createBillPdf = async (folderPath, billSpec, bill) => {
+    await new Promise(r => setTimeout(r, 1000));
+    const creationTimePath = path.join(folderPath, 'test-'+bill['clubId']+'.txt');
+    var memberNum = bill['members'].length;
+    fs.writeFileSync(creationTimePath, "Number: " + memberNum);
+    // TODO implement the actual functionality
+}
+
+const createSepaFiles = async (folderPath, billSpec, billList) => {
+    await new Promise(r => setTimeout(r, 1000));
+    // TODO implement the actual functionality
+}
+
+module.exports = { createBillFolder, storeBillData, createBillPdf, createSepaFiles };

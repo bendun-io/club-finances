@@ -34,17 +34,119 @@ window.init = () => {
 }
 
 const createBill = () => {
+    document.getElementById("progressPanel").style.display = "block";
+
+    updateCurrentTask("Validiere Datenverfügbarkeit");
     if(! validateData() ) {
         return;
     }
+    finishTask();
+
     // Create the bill folder
+    updateCurrentTask("Erstelle Rechnungsordner");
     const billFolder = window.storage.createBillFolder();
     billFolder.then(
         (folderPath) => {
-            alert(folderPath);
+            finishTask("Ordner erstellt: " + folderPath);
+            createAndStoreBills(folderPath);
         }
     );
-    
+}
+
+var errors = [];
+const addToErrors = (errorMessage) => {
+    errors.push(errorMessage);
+    document.getElementById("errorPanel").style.display = "block";
+    document.getElementById("errorlog").value = errors.join("\r\n");
+}
+
+const updateCurrentTask = (currentTask) => {
+    document.getElementById("currentTask").style.display = "block";
+    document.getElementById("currentTask").innerText = currentTask;
+}
+
+const removeCurrentTask = () => { // make style display none
+    document.getElementById("currentTask").style.display = "none";
+}
+
+const finishTask = (finished) => {
+    var toAdd = finished;
+    if(toAdd == null) {
+        toAdd = document.getElementById("currentTask").innerText;
+    }
+    // Create new li-dom eleemnt and add it to the list
+    var li = document.createElement("li");
+    li.appendChild(document.createTextNode(toAdd));
+    document.getElementById("finishedTasks").appendChild(li);
+}
+
+const getEmptyBill = (clubId) => {
+    return {
+        clubId: clubId,
+        members: []
+    }
+}
+
+const createAndStoreBills = async (folderPath) => {
+    var billMetaData = {
+        date: document.getElementById('date').value,
+        title: document.getElementById('title').value,
+        position: document.getElementById('position').value,
+        taxrate: document.getElementById('taxrate').value,
+        rtbankaccount: selectedBankAccount
+    };
+    var bills = {};
+
+    updateCurrentTask("Kombiniere Daten");
+    // Aggregating members to bills
+    for(let member of memberData) {
+        var clubId = member['Clubnummer'];
+        if(bills[clubId] == null) {
+            bills[clubId] = getEmptyBill(clubId);
+        }
+        bills[clubId].members.push(member);
+    }
+
+    // Adding bank data to bills
+    for(let bankAccount of bankData) {
+        var clubId = bankAccount['Clubnummer'];
+        if(bills[clubId] == null) {
+            addToErrors(`Clubnummer ${clubId} nicht in Mitgliederliste gefunden!`);
+            continue;
+        }
+        if( !bankAccount['Standard']) {
+            continue;
+        }
+        bills[clubId].bankAccount = bankAccount;
+    }
+    finishTask();
+
+    updateCurrentTask("Prüfe Kontodatenverfügbarkeit");
+    // Testing if every bill has a bankAccount
+    for(let clubId in bills) {
+        if(bills[clubId].bankAccount == null) {
+            addToErrors(`Clubnummer ${clubId} hat kein Standard Bankkonto!`);
+            // remove the bill from the list
+            delete bills[clubId];
+        }
+    }
+    finishTask();
+
+    // Creating the bill pdfs
+    var i = 1;
+    for(let clubId in bills) {
+        updateCurrentTask("Erstelle Rechnungen PDFs (" + i + "/" + Object.keys(bills).length + ")");
+        var bill = bills[clubId];
+        await storage.createBillPdf(folderPath, billMetaData, bill);
+        i++;
+    }
+    finishTask("PDF Rechnungen erstellt");
+
+    updateCurrentTask("Erstelle SEPA Dateien");
+    await storage.createSepaFiles(folderPath, billMetaData, bills);
+    finishTask();
+
+    removeCurrentTask();
 }
 
 const validateData = () => {

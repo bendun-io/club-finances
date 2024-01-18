@@ -8,9 +8,39 @@ const navigationMap = {
 const initLoadedPage = (filename) => {
     // Replace 'html' with 'js' in the filename
     const jsFilename = filename.replace('.html', '.js');
+    const tsFilename = filename.replace('.html', '.ts');
 
     // Fetch the JavaScript file
-    fetch(jsFilename)
+    loadFile(jsFilename)
+        .catch(_error => loadFile(tsFilename)
+        .catch(_error => console.log('JavaScript file ' + jsFilename + ' not found: ' + _error))
+    );
+
+    // fetch(jsFilename)
+    //     .then(response => {
+    //         if (response.ok) {
+    //             return response.text();
+    //         } else {
+    //             console.log('JavaScript file not found: ' + jsFilename);
+    //         }
+    //     })
+    //     .then(js => {
+    //         // Create a new function from the loaded script
+    //         const scriptFunction = new Function(js);
+    //         // Run the function
+    //         scriptFunction();
+
+    //         // If the function defines an 'init' function, run it and then delete it
+    //         if (typeof window.init === 'function') {
+    //             window.init();
+    //             window.init = undefined;
+    //         }
+    //     })
+    //     .catch(_error => console.log('JavaScript file ' + jsFilename + ' not found: ' + _error));
+};
+
+const loadFile = (filename) => {
+    return fetch(filename)
         .then(response => {
             if (response.ok) {
                 return response.text();
@@ -29,8 +59,7 @@ const initLoadedPage = (filename) => {
                 window.init();
                 window.init = undefined;
             }
-        })
-        .catch(_error => console.log('JavaScript file ' + jsFilename + ' not found: ' + _error));
+        });
 };
 
 const toggleMenuInit = () => {
@@ -65,8 +94,8 @@ const onSaveSettingsClick = async function () {
         password: password,
         bankDetails: []
     };
-    
-    for(let bankDetails of document.querySelectorAll('.bankDetails')) {
+
+    for (let bankDetails of document.querySelectorAll('.bankDetails')) {
         settings.bankDetails.push({
             accountName: bankDetails.querySelector('input[name="accountName"]').value.toString(),
             iban: bankDetails.querySelector('input[name="iban"]').value.toString(),

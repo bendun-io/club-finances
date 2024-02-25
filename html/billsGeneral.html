@@ -1,0 +1,77 @@
+<h1>Abrechnungen erstellen</h1>
+
+<div>
+    <form id="details">
+        <fieldset style="margin-bottom: 1em;">
+            <legend>Abrechnungsinformationen</legend>
+            <input type="text" id="title" name="title" placeholder="Rechnungstitel" />
+            <input type="date" id="date" name="date" placeholder="Datum" />
+            <div id="bankAccountSelection" style="padding-top: 10px; padding-bottom: 1em;">
+                <div>
+                    <label for="bankAccount">Bankkonto:</label>
+                    <select id="bankAccount">
+                    </select>
+                </div>
+                <div id="noBankAccountSelected" style="display: none;">Wähle ein Bankkonto!</div>
+            </div>
+        </fieldset>
+        <fieldset style="margin-bottom: 1em;">
+            <legend>Kontodaten und Rechnungsliste</legend>
+            <div>
+                Rechnungsdaten (<a href="assets/template-general.xlsx">Vorlage</a>): <input type="file" id="billingExcel"
+                    accept=".xls,.xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel" />
+            </div>
+            <div>
+                Kontodaten: <input type="file" id="bankExcel"
+                    accept=".xls,.xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel" />
+            </div>
+        </fieldset>
+        <input type="button" value="SEPA Einzug erstellen" id="createBill">
+    </form>
+</div>
+
+<div id="progressPanel" style="display: none;">
+    <ul id="finishedTasks">
+        <style>
+            li {
+                list-style-type: none;
+            }
+
+            li::before {
+                content: "\2713\0020";
+                /* Unicode character for a check mark, followed by a space */
+                color: green;
+            }
+        </style>
+    </ul>
+    <ul>
+        <style>
+            @keyframes spin {
+                0% {
+                    transform: rotate(0deg);
+                }
+
+                100% {
+                    transform: rotate(360deg);
+                }
+            }
+
+            #currentTask::before {
+                content: "";
+                display: inline-block;
+                width: 16px;
+                height: 16px;
+                border: 2px solid #f3f3f3;
+                border-top: 2px solid #3498db;
+                border-radius: 50%;
+                animation: spin 2s linear infinite;
+            }
+        </style>
+        <li id="currentTask"></li>
+    </ul>
+</div>
+
+<div id="errorPanel" style="display: none;">
+    Errors:<br />
+    <textarea id="errorlog" style="width: 100%; height: 200px;"></textarea>
+</div>

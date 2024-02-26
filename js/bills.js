@@ -51,9 +51,7 @@ const createBillPdf = async (folderPath, billSpec, bill) => {
 /* assumes that billSpec has the following structure:
 { "accountName": "Round Table Deutschland",
     "iban": "XXXXXXXX",
-    "bic": "XXXXX",
-    "id": "XXXXXXXX"
-}
+    "bic": "XXXXX",}
 */
 const createSepaFiles = async (folderPath, billSpec, billList) => {
     // compute date in the form 2024-01-19T12:19:23
@@ -70,7 +68,7 @@ const createSepaFiles = async (folderPath, billSpec, billList) => {
         'xsi:schemaLocation': 'urn:iso:std:iso:20022:tech:xsd:pain.008.002.02 pain.008.002.02.xsd'
     });
     var GrpHdr = CstmrDrctDbtInitn.ele('GrpHdr');
-    GrpHdr.ele('MsgId', billSpec["id"]);
+    GrpHdr.ele('MsgId', "CLUBSEPA 1.0 " + creationDate);
     GrpHdr.ele('CreDtTm', creationDate);
     GrpHdr.ele('NbOfTxs', billList.length);
     var InitgPty = GrpHdr.ele('InitgPty');
@@ -109,7 +107,7 @@ const createSepaFiles = async (folderPath, billSpec, billList) => {
     for(var i = 0; i < billList.length; i++) {
         chkSum += addPaymentInfo(PmtInf, billSpec, billList[i]);
     }
-    PmtInf.ele('CtrlSum', chkSum);
+    PmtInf.ele('CtrlSum', transformAmount(chkSum));
 
     var xmlString = root.end({ pretty: true});
     // Assuming folderPath is a string representing the directory where you want to save the file
@@ -124,8 +122,9 @@ Needs bill to have the following components:
 - mandateId: string
 - date: string
 - bic: string
-- name: string
+- debitor: string
 - iban: string
+- purpose: string
 */
 const addPaymentInfo = function(paymentRoot, billSpec, bill) {
     var DrctDbtTxInf = paymentRoot.ele('DrctDbtTxInf');
@@ -133,7 +132,7 @@ const addPaymentInfo = function(paymentRoot, billSpec, bill) {
     var PmtId = DrctDbtTxInf.ele('PmtId');
     PmtId.ele('EndToEndId', bill['id']);
     
-    var InstdAmt = DrctDbtTxInf.ele('InstdAmt', bill['amount']);
+    var InstdAmt = DrctDbtTxInf.ele('InstdAmt', transformAmount(bill['amount']));
     InstdAmt.att('Ccy', 'EUR');
 
     var DrctDbtTx = DrctDbtTxInf.ele('DrctDbtTx');
@@ -146,16 +145,20 @@ const addPaymentInfo = function(paymentRoot, billSpec, bill) {
     dbtFinInstnId.ele('BIC', bill['bic']);
 
     var dbt = DrctDbtTxInf.ele('Dbtr');
-    dbt.ele('Nm', bill['name']);
+    dbt.ele('Nm', bill['debitor']);
 
     var dbtAcct = DrctDbtTxInf.ele('DbtrAcct');
     var dbtId = dbtAcct.ele('Id');
     dbtId.ele('IBAN', bill['iban']);
 
     var RmtInf = DrctDbtTxInf.ele('RmtInf');
-    RmtInf.ele('Ustrd', 'Club Contribution');
+    RmtInf.ele('Ustrd', bill['purpose']);
 
     return bill['amount'];
+}
+
+const transformAmount = (amount) => {
+    return (amount/100).toFixed(2);
 }
 
 module.exports = { createBillFolder, storeBillData, createBillPdf, createSepaFiles };

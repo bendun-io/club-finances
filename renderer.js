@@ -101,6 +101,7 @@ const onSaveSettingsClick = async function () {
             accountName: bankDetails.querySelector('input[name="accountName"]').value.toString(),
             iban: bankDetails.querySelector('input[name="iban"]').value.toString(),
             bic: bankDetails.querySelector('input[name="bic"]').value.toString(),
+            gleaubigerId: bankDetails.querySelector('input[name="gleaubigerId"]').value.toString(),
         });
     }
 

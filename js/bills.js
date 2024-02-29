@@ -48,10 +48,14 @@ const createBillPdf = async (folderPath, billSpec, bill) => {
     // TODO implement the actual functionality
 }
 
-/* assumes that billSpec has the following structure:
-{ "accountName": "Round Table Deutschland",
+/* Assumes that billList is an array with of bills fitting the addPayment method and 
+that billSpec has the following structure:
+{
+    "accountName": "Round Table Deutschland",
     "iban": "XXXXXXXX",
-    "bic": "XXXXX",}
+    "bic": "XXXXX",
+    "gleaubigerId": "XXXX"
+}
 */
 const createSepaFiles = async (folderPath, billSpec, billList) => {
     // compute date in the form 2024-01-19T12:19:23
@@ -60,13 +64,13 @@ const createSepaFiles = async (folderPath, billSpec, billList) => {
     var timeStr = date.toTimeString().split(' ')[0];
     var creationDate = dateStr + 'T' + timeStr;
 
-    var root = builder.create('Document');
-
-    var CstmrDrctDbtInitn = root.ele('CstmrDrctDbtInitn', {
+    var root = builder.create('Document', {
         'xmlns': 'urn:iso:std:iso:20022:tech:xsd:pain.008.002.02',
         'xmlns:xsi': 'http://www.w3.org/2001/XMLSchema-instance',
         'xsi:schemaLocation': 'urn:iso:std:iso:20022:tech:xsd:pain.008.002.02 pain.008.002.02.xsd'
     });
+
+    var CstmrDrctDbtInitn = root.ele('CstmrDrctDbtInitn');
     var GrpHdr = CstmrDrctDbtInitn.ele('GrpHdr');
     GrpHdr.ele('MsgId', "CLUBSEPA 1.0 " + creationDate);
     GrpHdr.ele('CreDtTm', creationDate);
@@ -74,7 +78,7 @@ const createSepaFiles = async (folderPath, billSpec, billList) => {
     var InitgPty = GrpHdr.ele('InitgPty');
     InitgPty.ele('Nm', billSpec['accountName']);
     var PmtInf = CstmrDrctDbtInitn.ele('PmtInf');
-    PmtInf.ele('PmtInfId', 'Payment Information ID');
+    PmtInf.ele('PmtInfId', 'PaymentInfo1'); // just a unique id
     PmtInf.ele('PmtMtd', 'DD');
     PmtInf.ele('NbOfTxs', billList.length);
     // PmtInf.ele('CtrlSum', 'Control Sum');
@@ -84,12 +88,12 @@ const createSepaFiles = async (folderPath, billSpec, billList) => {
     var LclInstrm = PmtTpInf.ele('LclInstrm');
     LclInstrm.ele('Cd', 'CORE');
     PmtTpInf.ele('SeqTp', 'FRST');
-    var ReqdColltnDt = PmtInf.ele('ReqdColltnDt', 'Collection Date');
+    var ReqdColltnDt = PmtInf.ele('ReqdColltnDt', dateStr);
     var Cdtr = PmtInf.ele('Cdtr');
     Cdtr.ele('Nm', billSpec['accountName']);
     var CdtrAcct = PmtInf.ele('CdtrAcct');
     var Id = CdtrAcct.ele('Id');
-    Id.ele('IBAN', billSpec['iban']);
+    Id.ele('IBAN', transformIban(billSpec['iban']));
     var CdtrAgt = PmtInf.ele('CdtrAgt');
     var FinInstnId = CdtrAgt.ele('FinInstnId');
     FinInstnId.ele('BIC', billSpec['bic']);
@@ -99,7 +103,7 @@ const createSepaFiles = async (folderPath, billSpec, billList) => {
     var id = cdtrSchmeId.ele('Id');
     id.ele('PrvtId', 'Othr');
     var othr = id.ele('Othr');
-    othr.ele('Id', 'DE98ZZZ09999999999'); // TODO use parameter
+    othr.ele('Id', billSpec['gleaubigerId']);
     var schmeNm = othr.ele('SchmeNm');
     schmeNm.ele('Prtry', 'SEPA');
 
@@ -149,7 +153,7 @@ const addPaymentInfo = function(paymentRoot, billSpec, bill) {
 
     var dbtAcct = DrctDbtTxInf.ele('DbtrAcct');
     var dbtId = dbtAcct.ele('Id');
-    dbtId.ele('IBAN', bill['iban']);
+    dbtId.ele('IBAN', transformIban(bill['iban']));
 
     var RmtInf = DrctDbtTxInf.ele('RmtInf');
     RmtInf.ele('Ustrd', bill['purpose']);
@@ -159,6 +163,11 @@ const addPaymentInfo = function(paymentRoot, billSpec, bill) {
 
 const transformAmount = (amount) => {
     return (amount/100).toFixed(2);
+}
+
+const transformIban = (iban) => {
+    // remove everything that is not a number or a letter
+    return iban.replace(/[^a-zA-Z0-9]/g, '');
 }
 
 module.exports = { createBillFolder, storeBillData, createBillPdf, createSepaFiles };

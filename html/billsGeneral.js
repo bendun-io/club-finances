@@ -1,27 +1,26 @@
 let selectedBankAccount = null;
-let memberData = null;
-const storeMemberData = (data) => {
-    memberData = data;
+let billData = null;
+const storeBillData = (data) => {
+    billData = data;
 }
-let bankData = null;
-const storeBankData = (data) => {
-    bankData = data;
-}
+let bankAccountMapping = {};
 
 window.init = () => {
     document.getElementById('createBill').addEventListener('click', createBill);
 
     document.getElementById('billingExcel').addEventListener('change', 
-        (event) => { onFileChange(event, storeMemberData);  });
-    document.getElementById('bankExcel').addEventListener('change', 
-        (event) => { onFileChange(event, storeBankData);  
-    });
+        (event) => { onFileChange(event, storeBillData);  });
 
+    document.getElementById('bankAccount').addEventListener('change', function(event) {
+        selectedBankAccount = bankAccountMapping[event.target.value];
+    });
 
     // for every bankaccount in the settings add a selection in bankAccount select
     window.storage.loadSettings().then(
         (settings) => {
             for (let bankAccount of settings.bankDetails) {
+
+                bankAccountMapping[bankAccount.accountName] = bankAccount;
                 if(selectedBankAccount == null) {
                     selectedBankAccount = bankAccount;
                 }
@@ -48,7 +47,7 @@ const createBill = () => {
     billFolder.then(
         (folderPath) => {
             finishTask("Ordner erstellt: " + folderPath);
-            createAndStoreBills(folderPath);
+            createAndStoreSepa(folderPath);
         }
     );
 }
@@ -87,62 +86,18 @@ const getEmptyBill = (clubId) => {
     }
 }
 
-const createAndStoreBills = async (folderPath) => {
+const createAndStoreSepa = async (folderPath) => {
     var billMetaData = {
-        date: document.getElementById('date').value,
-        title: document.getElementById('title').value,
-        // position: document.getElementById('position').value,
-        // taxrate: document.getElementById('taxrate').value,
-        rtbankaccount: selectedBankAccount
+        rtbankaccount: selectedBankAccount,
+        accountName: selectedBankAccount.accountName,
+        iban: selectedBankAccount.iban,
+        bic: selectedBankAccount.bic,
+        gleaubigerId: selectedBankAccount.gleaubigerId
     };
-    var bills = {};
 
-    updateCurrentTask("Kombiniere Daten");
-    // Aggregating members to bills
-    for(let member of memberData) {
-        var clubId = member['Clubnummer'];
-        if(bills[clubId] == null) {
-            bills[clubId] = getEmptyBill(clubId);
-        }
-        bills[clubId].members.push(member);
-    }
-
-    // Adding bank data to bills
-    for(let bankAccount of bankData) {
-        var clubId = bankAccount['Clubnummer'];
-        if(bills[clubId] == null) {
-            addToErrors(`Clubnummer ${clubId} nicht in Mitgliederliste gefunden!`);
-            continue;
-        }
-        if( !bankAccount['Standard']) {
-            continue;
-        }
-        bills[clubId].bankAccount = bankAccount;
-    }
-    finishTask();
-
-    updateCurrentTask("Prüfe Kontodatenverfügbarkeit");
-    // Testing if every bill has a bankAccount
-    for(let clubId in bills) {
-        if(bills[clubId].bankAccount == null) {
-            addToErrors(`Clubnummer ${clubId} hat kein Standard Bankkonto!`);
-            // remove the bill from the list
-            delete bills[clubId];
-        }
-    }
-    finishTask();
-
-    // Creating the bill pdfs
-    // var i = 1;
-    // for(let clubId in bills) {
-    //     updateCurrentTask("Erstelle Rechnungen PDFs (" + i + "/" + Object.keys(bills).length + ")");
-    //     var bill = bills[clubId];
-    //     await storage.createBillPdf(folderPath, billMetaData, bill);
-    //     i++;
-    // }
-    // finishTask("PDF Rechnungen erstellt");
-
-    updateCurrentTask("Erstelle SEPA Dateien");
+    updateCurrentTask("Erstelle SEPA Datei(en)");
+    var bills = billData; // remove first element
+    bills.shift();
     await storage.createSepaFiles(folderPath, billMetaData, bills);
     finishTask();
 
@@ -150,7 +105,7 @@ const createAndStoreBills = async (folderPath) => {
 }
 
 const validateData = () => {
-    if(memberData == null || bankData == null) {
+    if( billData == null ) {
         alert('Bitte wähle zuerst die Excel Dateien aus!');
         return false;
     }

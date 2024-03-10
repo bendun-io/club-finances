@@ -1,0 +1,156 @@
+<html>
+    <head>
+        <style>
+            * {
+                font-family: Verdana, Geneva, Tahoma, sans-serif;
+            }
+            .paper {
+                background-image: url("rt-briefpapier.jpg");
+                background-repeat: no-repeat; 
+                background-size: 210mm 297mm;
+                width: 210mm;
+                height: 297mm;
+                position: fixed;
+                left:0;
+                top:0;
+                margin: 0;
+                padding: 0;
+            }
+            .recipient {
+                position: fixed;
+                left: 25mm;
+                top: 62mm;
+            }
+            .content {
+                position: fixed;
+                left: 25mm;
+                width: 185mm; /* 210-25 = 185 */
+                top: 120mm;
+            }
+            .sender {
+                position: fixed;
+                right: 25mm;
+                top: 62mm;
+                width: 90mm;
+                text-align: right;
+            }
+            .sender > * {
+                text-align: right;
+            }
+            .footer {
+                position: fixed;
+                left: 0mm;
+                bottom: 25px;
+                width: 200mm;
+                font-size: 11;
+                font-family: Verdana, Geneva, Tahoma, sans-serif;
+                text-align: center;
+            }
+            .footer > * {
+                font-size: 11;
+                font-family: Verdana, Geneva, Tahoma, sans-serif;
+                text-align: center;
+            }
+        </style>
+    </head>
+    <body>
+        <div id="paper" class="paper">
+            <div class="recipient">
+                <u>Round Table Deutschland</u><br /><br />
+                ###ClubRecipient###<br />
+                ###NameRecipient###<br />
+                ###StreetRecipient###<br />
+                ###AddressRecipient###<br />
+            </div>
+
+            <div class="footer">
+                <table style="width: 100%;">
+                    <tr>
+                        <td style="width: 30%;">###ORG_NAME###</td>
+                        <td style="width: 30%;">IBAN:</td>
+                        <td style="width: 20%;">BIC:</td>
+                        <td style="width: 20%;">Kreditinstitut:</td>
+                    </tr>
+                    <tr>
+                        <td></td>
+                        <td>###ORG_IBAN###</td>
+                        <td>###ORG_BIC###</td>
+                        <td>###ORG_BANK###</td>
+                    </tr>
+                </table>
+                <br />
+                <br />
+                Rechnung Nr. ###BillNumber#### | Seite 1 von 1
+            </div>
+
+            <div class="sender">
+                ###OrgName###<br/>
+                ###Treasurer###<br />
+                ###TreasurerRole###<br />
+                ###TreasurerStreet###<br />
+                ###TreasurerPostal### ###TreasurerCity###<br />
+                <br />
+                Tel: ###TreasurerPhone###<br />
+                ###TreasurerEmail###<br />
+                <br />
+                <table style="width:100%; margin: 0; border: none; padding: 0;">
+                    <tr>
+                        <td>Datum:</td>
+                        <td>###BillDate###</td>
+                    </tr>
+                    <tr>
+                        <td>Rechnung Nr.:</td>
+                        <td>###BillNumber####</td>
+                    </tr>
+                </table>
+            </div>
+
+            <div class="content">
+                <h2>Rechnung</h2>
+                <br />
+                <p>###Description###</p>
+                <br />
+                <table style="width: 100%; border: none;">
+                    <thead style="background-color: rgb(231, 228, 228);">
+                        <td style="width: 5%;"><b>Pos</b></td>
+                        <td style="width: 15%;"><b>Menge</b></td>
+                        <td style="width: 50%;"><b>Beschreibung</b></td>
+                        <td style="width: 15%;"><b>Preis</b></td>
+                        <td style="width: 15%;"><b>Gesamt</b></td>
+                    </thead>
+                    ###POSITIONS###
+                    <tr>
+                        <td>&nbsp;</td><td></td><td></td><td></td><td></td>
+                    </tr>
+                    <tr>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td style="text-align: right;"><b>Summe (netto):</b></td>
+                        <td><b>###TOTAL_NET### &euro;</b></td>
+                    </tr>
+                    <tr>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td style="text-align: right;"><b>Mehrwertsteuer (###TAXRATE###):</b></td>
+                        <td><b>###TAXVALUE### &euro;</b></td>
+                    </tr>
+                    <tfoot style="height: 2em; background-color: rgb(231, 228, 228);">
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td style="text-align: right;"><b>Gesamtpreis:</b></td>
+                        <td><b>###TOTAL### &euro;</b></td>
+                    </tfoot>
+                </table>
+                <br />
+                <br />
+                Zahlungsart: SEPA-Lastschrift<br />
+                <br />
+                Der oben genannte Betrag wird in den kommenden Tagen per SEPA-Lastschrift zu dem Mandat ###SEPAMANDAT### 
+                mit der Gl&auml;ubiger-ID ###GLAEUBIGERID### vom hinterlegten Konto eingezogen.
+            </div>
+        </div>
+    </body>
+</html>

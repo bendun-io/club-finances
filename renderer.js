@@ -16,28 +16,6 @@ const initLoadedPage = (filename) => {
         .catch(_error => loadFile(tsFilename)
         .catch(_error => console.log('JavaScript file ' + jsFilename + ' not found: ' + _error))
     );
-
-    // fetch(jsFilename)
-    //     .then(response => {
-    //         if (response.ok) {
-    //             return response.text();
-    //         } else {
-    //             console.log('JavaScript file not found: ' + jsFilename);
-    //         }
-    //     })
-    //     .then(js => {
-    //         // Create a new function from the loaded script
-    //         const scriptFunction = new Function(js);
-    //         // Run the function
-    //         scriptFunction();
-
-    //         // If the function defines an 'init' function, run it and then delete it
-    //         if (typeof window.init === 'function') {
-    //             window.init();
-    //             window.init = undefined;
-    //         }
-    //     })
-    //     .catch(_error => console.log('JavaScript file ' + jsFilename + ' not found: ' + _error));
 };
 
 const loadFile = (filename) => {
@@ -90,15 +68,35 @@ const toggleMenuInit = () => {
 const onSaveSettingsClick = async function () {
     var username = document.querySelector('input[name="username"]').value.toString();
     var password = document.querySelector('input[name="password"]').value.toString();
+
+    var orgname = document.querySelector('input[name="orgname"]').value.toString();
+    var treasurer_name = document.querySelector('input[name="treasurer_name"]').value.toString();
+    var treasurer_role = document.querySelector('input[name="treasurer_role"]').value.toString();
+    var treasurer_street = document.querySelector('input[name="treasurer_street"]').value.toString();
+    var treasurer_postal = document.querySelector('input[name="treasurer_postal"]').value.toString();
+    var treasurer_city = document.querySelector('input[name="treasurer_city"]').value.toString();
+    var treasurer_email = document.querySelector('input[name="treasurer_email"]').value.toString();
+    var treasurer_phone = document.querySelector('input[name="treasurer_phone"]').value.toString();
+
     var settings = {
         username: username,
         password: password,
-        bankDetails: []
+        bankDetails: [],
+        
+        orgname: orgname,
+        treasurer_name: treasurer_name,
+        treasurer_role: treasurer_role,
+        treasurer_street: treasurer_street,
+        treasurer_postal: treasurer_postal,
+        treasurer_city: treasurer_city,
+        treasurer_email: treasurer_email,
+        treasurer_phone: treasurer_phone
     };
 
     for (let bankDetails of document.querySelectorAll('.bankDetails')) {
         settings.bankDetails.push({
             accountName: bankDetails.querySelector('input[name="accountName"]').value.toString(),
+            institute: bankDetails.querySelector('input[name="institute"]').value.toString(),
             iban: bankDetails.querySelector('input[name="iban"]').value.toString(),
             bic: bankDetails.querySelector('input[name="bic"]').value.toString(),
             gleaubigerId: bankDetails.querySelector('input[name="gleaubigerId"]').value.toString(),

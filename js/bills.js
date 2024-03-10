@@ -4,6 +4,7 @@ const os = require('os');
 const { v4: uuidv4 } = require('uuid');
 const { shell } = require('electron');
 const builder = require('xmlbuilder');
+const puppeteer = require('puppeteer');
 
 
 const createBillFolder = () => {
@@ -40,12 +41,74 @@ const storeBillData = (folderPath, billData) => {
     fs.writeFileSync(billDataPath, JSON.stringify(billData, null, 2));
 }
 
-const createBillPdf = async (folderPath, billSpec, bill) => {
-    await new Promise(r => setTimeout(r, 1000));
-    const creationTimePath = path.join(folderPath, 'test-'+bill['clubId']+'.txt');
-    var memberNum = bill['members'].length;
-    fs.writeFileSync(creationTimePath, "Number: " + memberNum);
-    // TODO implement the actual functionality
+/*
+ * billSpec has the following structure:
+    - gleaubigerId: "XXXX"
+    - orgname
+    - treasurer_name
+    - treasurer_role
+    - treasurer_street
+    - treasurer_postal
+    - treasurer_city
+    - treasurer_email
+    - treasurer_phone
+
+ * bill has the following structure:
+    - billnumber 
+    - billdate
+    - mandateId
+    - id
+*/
+
+const createBillPdf = async (folderPath, billSpec, bill) => {    
+    const browser = await puppeteer.launch();
+    const page = await browser.newPage();
+
+    // Assuming the HTML file is in the 'assets' directory
+    await page.goto(`file://${path.join(__dirname, '..', 'assets', 'bill-template.html')}`, {waitUntil: 'networkidle0'});
+
+    // You can modify the page content here if needed
+    let backgroundPath = `file://${path.join(__dirname, '..', 'assets', 'rt-briefpapier.jpg')}`;
+    await page.evaluate((billSpec, bill) => {
+        let content = document.documentElement.innerHTML;
+    
+        content = content.replaceAll("###GLAEUBIGERID###", billSpec["gleaubigerId"])
+            .replaceAll("###ORG_NAME###", billSpec["accountName"])
+            .replaceAll("###ORG_IBAN###", billSpec["iban"])
+            .replaceAll("###ORG_BIC###", billSpec["bic"])
+            .replaceAll("###ORG_BANK###", billSpec["bank"])
+            .replaceAll("###OrgName###", billSpec["orgname"])
+            .replaceAll("###Treasurer###", billSpec["treasurer_name"])
+            .replaceAll("###TreasurerRole###", billSpec["treasurer_role"])
+            .replaceAll("###TreasurerStreet###", billSpec["treasurer_street"])
+            .replaceAll("###TreasurerPostal###", billSpec["treasurer_postal"])
+            .replaceAll("###TreasurerCity###", billSpec["treasurer_city"])
+            .replaceAll("###TreasurerEmail###", billSpec["treasurer_email"])
+            .replaceAll("###TreasurerPhone###", billSpec["treasurer_phone"])
+            ;
+
+        content = content.replaceAll("###BillNumber####", bill["billnumber"])
+            .replaceAll("###POSITIONS###", bill["positions"])
+            .replaceAll("###BillDate###", bill['billdate'])
+            .replaceAll("###SEPAMANDAT###", bill["mandateId"])
+            .replaceAll("###Description###", bill["description"])
+            .replaceAll("###ClubRecipient###", bill["recipient"]["club"])
+            .replaceAll("###NameRecipient###", bill["recipient"]["name"])
+            .replaceAll("###StreetRecipient###", bill["recipient"]["street"])
+            .replaceAll("###AddressRecipient###", bill["recipient"]["address"])
+            .replaceAll("###TOTAL_NET###", bill["totalNet"])
+            .replaceAll("###TAXRATE###", bill["taxrate"])
+            .replaceAll("###TAXVALUE###", bill["taxvalue"])
+            .replaceALl("###TOTAL###", bill["total"]);
+
+        document.documentElement.innerHTML = content;
+    }, billSpec, bill);
+
+    var billName = 'bill-'+bill['id']+'.pdf';
+    const pdfPath = path.join(folderPath, billName);
+    await page.pdf({path: pdfPath, format: 'A4', printBackground: true});
+
+    await browser.close();
 }
 
 /* Assumes that billList is an array with of bills fitting the addPayment method and 
@@ -58,11 +121,19 @@ that billSpec has the following structure:
 }
 */
 const createSepaFiles = async (folderPath, billSpec, billList) => {
+    createBillPdf(folderPath, billSpec, billList[0]); // just for testing here
+
     // compute date in the form 2024-01-19T12:19:23
     var date = new Date();
     var dateStr = date.toISOString().split('T')[0];
     var timeStr = date.toTimeString().split(' ')[0];
     var creationDate = dateStr + 'T' + timeStr;
+
+    // compute the checksum
+    var chkSum = 0;
+    for(var i = 0; i < billList.length; i++) {
+        chkSum += bill['amount'];
+    }
 
     var root = builder.create('Document', {
         'xmlns': 'urn:iso:std:iso:20022:tech:xsd:pain.008.002.02',
@@ -81,7 +152,7 @@ const createSepaFiles = async (folderPath, billSpec, billList) => {
     PmtInf.ele('PmtInfId', 'PaymentInfo1'); // just a unique id
     PmtInf.ele('PmtMtd', 'DD');
     PmtInf.ele('NbOfTxs', billList.length);
-    // PmtInf.ele('CtrlSum', 'Control Sum');
+    PmtInf.ele('CtrlSum', transformAmount(chkSum));
     var PmtTpInf = PmtInf.ele('PmtTpInf');
     var SvcLvl = PmtTpInf.ele('SvcLvl');
     SvcLvl.ele('Cd', 'SEPA');
@@ -107,12 +178,10 @@ const createSepaFiles = async (folderPath, billSpec, billList) => {
     var schmeNm = othr.ele('SchmeNm');
     schmeNm.ele('Prtry', 'SEPA');
 
-    var chkSum = 0;
     for(var i = 0; i < billList.length; i++) {
-        chkSum += addPaymentInfo(PmtInf, billSpec, billList[i]);
+        addPaymentInfo(PmtInf, billSpec, billList[i]);
     }
-    PmtInf.ele('CtrlSum', transformAmount(chkSum));
-
+    
     var xmlString = root.end({ pretty: true});
     // Assuming folderPath is a string representing the directory where you want to save the file
     var filePath = path.join(folderPath, 'sepa.xml');

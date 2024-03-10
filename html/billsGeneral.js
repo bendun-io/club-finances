@@ -4,6 +4,7 @@ const storeBillData = (data) => {
     billData = data;
 }
 let bankAccountMapping = {};
+let theSettings = null;
 
 window.init = () => {
     document.getElementById('createBill').addEventListener('click', createBill);
@@ -18,6 +19,8 @@ window.init = () => {
     // for every bankaccount in the settings add a selection in bankAccount select
     window.storage.loadSettings().then(
         (settings) => {
+            theSettings = settings;
+
             for (let bankAccount of settings.bankDetails) {
 
                 bankAccountMapping[bankAccount.accountName] = bankAccount;
@@ -90,9 +93,18 @@ const createAndStoreSepa = async (folderPath) => {
     var billMetaData = {
         rtbankaccount: selectedBankAccount,
         accountName: selectedBankAccount.accountName,
+        bank: selectedBankAccount.institute,
         iban: selectedBankAccount.iban,
         bic: selectedBankAccount.bic,
-        gleaubigerId: selectedBankAccount.gleaubigerId
+        gleaubigerId: selectedBankAccount.gleaubigerId,
+        orgname: theSettings.orgname,
+        treasurer_name: theSettings.treasurer_name,
+        treasurer_role: theSettings.treasurer_role,
+        treasurer_street: theSettings.treasurer_street,
+        treasurer_postal: theSettings.treasurer_postal,
+        treasurer_city: theSettings.treasurer_city,
+        treasurer_email: theSettings.treasurer_email,
+        treasurer_phone: theSettings.treasurer_phone
     };
 
     updateCurrentTask("Erstelle SEPA Datei(en)");

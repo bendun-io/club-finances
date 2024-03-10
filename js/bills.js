@@ -41,6 +41,8 @@ const storeBillData = (folderPath, billData) => {
     fs.writeFileSync(billDataPath, JSON.stringify(billData, null, 2));
 }
 
+
+const htmlErrorString = "<b style='color: red;'>MISSING</b>";
 /*
  * billSpec has the following structure:
     - gleaubigerId: "XXXX"
@@ -68,41 +70,41 @@ const createBillPdf = async (folderPath, billSpec, bill) => {
     await page.goto(`file://${path.join(__dirname, '..', 'assets', 'bill-template.html')}`, {waitUntil: 'networkidle0'});
 
     // You can modify the page content here if needed
-    let backgroundPath = `file://${path.join(__dirname, '..', 'assets', 'rt-briefpapier.jpg')}`;
-    await page.evaluate((billSpec, bill) => {
+    await page.evaluate((billSpec, bill, htmlErrorString) => {
         let content = document.documentElement.innerHTML;
     
-        content = content.replaceAll("###GLAEUBIGERID###", billSpec["gleaubigerId"])
-            .replaceAll("###ORG_NAME###", billSpec["accountName"])
-            .replaceAll("###ORG_IBAN###", billSpec["iban"])
-            .replaceAll("###ORG_BIC###", billSpec["bic"])
-            .replaceAll("###ORG_BANK###", billSpec["bank"])
-            .replaceAll("###OrgName###", billSpec["orgname"])
-            .replaceAll("###Treasurer###", billSpec["treasurer_name"])
-            .replaceAll("###TreasurerRole###", billSpec["treasurer_role"])
-            .replaceAll("###TreasurerStreet###", billSpec["treasurer_street"])
-            .replaceAll("###TreasurerPostal###", billSpec["treasurer_postal"])
-            .replaceAll("###TreasurerCity###", billSpec["treasurer_city"])
-            .replaceAll("###TreasurerEmail###", billSpec["treasurer_email"])
-            .replaceAll("###TreasurerPhone###", billSpec["treasurer_phone"])
+        content = content.replaceAll("###GLAEUBIGERID###", billSpec["gleaubigerId"] ?? htmlErrorString)
+            .replaceAll("###ORG_NAME###", billSpec["accountName"] ?? htmlErrorString)
+            .replaceAll("###ORG_IBAN###", billSpec["iban"] ?? htmlErrorString)
+            .replaceAll("###ORG_BIC###", billSpec["bic"] ?? htmlErrorString)
+            .replaceAll("###ORG_BANK###", billSpec["bank"] ?? htmlErrorString)
+            .replaceAll("###OrgName###", billSpec["orgname"] ?? htmlErrorString)
+            .replaceAll("###Treasurer###", billSpec["treasurer_name"] ?? htmlErrorString)
+            .replaceAll("###TreasurerRole###", billSpec["treasurer_role"] ?? htmlErrorString)
+            .replaceAll("###TreasurerStreet###", billSpec["treasurer_street"] ?? htmlErrorString)
+            .replaceAll("###TreasurerPostal###", billSpec["treasurer_postal"] ?? htmlErrorString)
+            .replaceAll("###TreasurerCity###", billSpec["treasurer_city"] ?? htmlErrorString)
+            .replaceAll("###TreasurerEmail###", billSpec["treasurer_email"] ?? htmlErrorString)
+            .replaceAll("###TreasurerPhone###", billSpec["treasurer_phone"] ?? htmlErrorString)
             ;
 
-        content = content.replaceAll("###BillNumber####", bill["billnumber"])
-            .replaceAll("###POSITIONS###", bill["positions"])
-            .replaceAll("###BillDate###", bill['billdate'])
-            .replaceAll("###SEPAMANDAT###", bill["mandateId"])
-            .replaceAll("###Description###", bill["description"])
-            .replaceAll("###ClubRecipient###", bill["recipient"]["club"])
-            .replaceAll("###NameRecipient###", bill["recipient"]["name"])
-            .replaceAll("###StreetRecipient###", bill["recipient"]["street"])
-            .replaceAll("###AddressRecipient###", bill["recipient"]["address"])
-            .replaceAll("###TOTAL_NET###", bill["totalNet"])
-            .replaceAll("###TAXRATE###", bill["taxrate"])
-            .replaceAll("###TAXVALUE###", bill["taxvalue"])
-            .replaceALl("###TOTAL###", bill["total"]);
+        content = content.replaceAll("###BillNumber####", bill["billnumber"] ?? htmlErrorString)
+            .replaceAll("###POSITIONS###", bill["positions"] ?? htmlErrorString)
+            .replaceAll("###BillDate###", bill['billdate'] ?? htmlErrorString)
+            .replaceAll("###SEPAMANDAT###", bill["mandateId"] ?? htmlErrorString)
+            .replaceAll("###Description###", bill["description"] ?? htmlErrorString)
+            .replaceAll("###ClubRecipient###", bill?.recipient?.club ?? htmlErrorString)
+            .replaceAll("###NameRecipient###", bill?.recipient?.name ?? htmlErrorString)
+            .replaceAll("###StreetRecipient###", bill?.recipient?.street ?? htmlErrorString)
+            .replaceAll("###AddressRecipient###", bill?.recipient?.address ?? htmlErrorString)
+            .replaceAll("###TOTAL_NET###", bill["totalNet"] ?? htmlErrorString)
+            .replaceAll("###TAXRATE###", bill["taxrate"] ?? htmlErrorString)
+            .replaceAll("###TAXVALUE###", bill["taxvalue"] ?? htmlErrorString)
+            .replaceAll("###TOTAL###", bill["total"] ?? htmlErrorString)
+            ;
 
         document.documentElement.innerHTML = content;
-    }, billSpec, bill);
+    }, billSpec, bill, htmlErrorString);
 
     var billName = 'bill-'+bill['id']+'.pdf';
     const pdfPath = path.join(folderPath, billName);
@@ -132,7 +134,7 @@ const createSepaFiles = async (folderPath, billSpec, billList) => {
     // compute the checksum
     var chkSum = 0;
     for(var i = 0; i < billList.length; i++) {
-        chkSum += bill['amount'];
+        chkSum += billList[i]['amount'];
     }
 
     var root = builder.create('Document', {

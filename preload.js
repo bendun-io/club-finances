@@ -9,5 +9,6 @@ contextBridge.exposeInMainWorld('storage', {
   loadExcelFile: (path) => ipcRenderer.invoke('loadExcelFile', path),
   createBillFolder: () => ipcRenderer.invoke('createBillFolder'),
   createBillPdf: (folderPath, billSpec, bill) => ipcRenderer.invoke('createBillPdf', folderPath, billSpec, bill),
+  createBillPdfFiles: (folderPath, billSpec, billList) => ipcRenderer.invoke('createBillPdfFiles', folderPath, billSpec, billList),
   createSepaFiles: (folderPath, billSpec, billList) => ipcRenderer.invoke('createSepaFiles', folderPath, billSpec, billList),
 })

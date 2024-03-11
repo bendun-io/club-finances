@@ -35,6 +35,10 @@ window.init = () => {
     );
 }
 
+const getPdfCheckmark = () => {
+    return document.getElementById('createPDF').checked;
+}
+
 const createBill = () => {
     document.getElementById("progressPanel").style.display = "block";
 
@@ -50,7 +54,7 @@ const createBill = () => {
     billFolder.then(
         (folderPath) => {
             finishTask("Ordner erstellt: " + folderPath);
-            createAndStoreSepa(folderPath);
+            createPdfAndSepa(folderPath);
         }
     );
 }
@@ -89,7 +93,7 @@ const getEmptyBill = (clubId) => {
     }
 }
 
-const createAndStoreSepa = async (folderPath) => {
+const createPdfAndSepa = async (folderPath) => {
     var billMetaData = {
         rtbankaccount: selectedBankAccount,
         accountName: selectedBankAccount.accountName,
@@ -107,9 +111,19 @@ const createAndStoreSepa = async (folderPath) => {
         treasurer_phone: theSettings.treasurer_phone
     };
 
-    updateCurrentTask("Erstelle SEPA Datei(en)");
     var bills = billData; // remove first element
     bills.shift();
+    // test if the checkmark for bills is set
+    if( getPdfCheckmark() ) {
+        updateCurrentTask("Erstelle Rechnungen (0/" + bills.length + ")");
+        for(var i=0; i<bills.length; i++) {
+            updateCurrentTask("Erstelle Rechnungen ("+(i+1)+"/" + bills.length + ")");
+            await storage.createBillPdf(folderPath, billMetaData, bills[i]);
+        }
+        finishTask("Rechnungen erstellt: " + bills.length);
+    }
+
+    updateCurrentTask("Erstelle SEPA Datei(en)");
     await storage.createSepaFiles(folderPath, billMetaData, bills);
     finishTask();
 

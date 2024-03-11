@@ -62,14 +62,25 @@ const htmlErrorString = "<b style='color: red;'>MISSING</b>";
     - id
 */
 
-const createBillPdf = async (folderPath, billSpec, bill) => {    
+const createBillPdf = async (folderPath, billSpec, bill) => {
     const browser = await puppeteer.launch();
     const page = await browser.newPage();
 
     // Assuming the HTML file is in the 'assets' directory
     await page.goto(`file://${path.join(__dirname, '..', 'assets', 'bill-template.html')}`, {waitUntil: 'networkidle0'});
 
-    // You can modify the page content here if needed
+    // Calculate bill properties
+    bill["total"] = bill["amount"];
+    bill["totalNet"] = (bill["amount"] / (1 + bill["taxrate"])).toFixed(2);
+    bill["taxvalue"] = bill["total"] - bill["totalNet"];
+
+    // only string formatting after this point
+    bill["total"] = transformAmount(bill["total"]);
+    bill["totalNet"] = transformAmount(bill["totalNet"]);
+    bill["taxvalue"] = transformAmount(bill["taxvalue"]);
+    bill["positions"] = ""; // "<tr><td>1</td><td>1<td>" + bill["position"] + "</td><td>" + bill["totalNet"]  + "</td><td>" + bill["totalNet"]  + "</td></tr>";
+    bill["taxrate"] = formatTaxRate(bill["taxrate"]);
+
     await page.evaluate((billSpec, bill, htmlErrorString) => {
         let content = document.documentElement.innerHTML;
     
@@ -88,15 +99,18 @@ const createBillPdf = async (folderPath, billSpec, bill) => {
             .replaceAll("###TreasurerPhone###", billSpec["treasurer_phone"] ?? htmlErrorString)
             ;
 
-        content = content.replaceAll("###BillNumber####", bill["billnumber"] ?? htmlErrorString)
+            
+        content = content.replaceAll("###BillNumber###", bill["billnumber"] ?? htmlErrorString)
             .replaceAll("###POSITIONS###", bill["positions"] ?? htmlErrorString)
+            .replaceAll("###POSITION_DESC###", bill["position"] ?? htmlErrorString)
+            .replaceAll("###POSITION_TOTAL###", bill['totalNet'] ?? htmlErrorString)
             .replaceAll("###BillDate###", bill['billdate'] ?? htmlErrorString)
             .replaceAll("###SEPAMANDAT###", bill["mandateId"] ?? htmlErrorString)
             .replaceAll("###Description###", bill["description"] ?? htmlErrorString)
-            .replaceAll("###ClubRecipient###", bill?.recipient?.club ?? htmlErrorString)
-            .replaceAll("###NameRecipient###", bill?.recipient?.name ?? htmlErrorString)
-            .replaceAll("###StreetRecipient###", bill?.recipient?.street ?? htmlErrorString)
-            .replaceAll("###AddressRecipient###", bill?.recipient?.address ?? htmlErrorString)
+            .replaceAll("###ClubRecipient###", bill["recipient_club"] ?? htmlErrorString)
+            .replaceAll("###NameRecipient###", bill["recipient_name"] ?? htmlErrorString)
+            .replaceAll("###StreetRecipient###", bill["recipient_street"] ?? htmlErrorString)
+            .replaceAll("###AddressRecipient###", bill["recipient_address"] ?? htmlErrorString)
             .replaceAll("###TOTAL_NET###", bill["totalNet"] ?? htmlErrorString)
             .replaceAll("###TAXRATE###", bill["taxrate"] ?? htmlErrorString)
             .replaceAll("###TAXVALUE###", bill["taxvalue"] ?? htmlErrorString)
@@ -123,8 +137,6 @@ that billSpec has the following structure:
 }
 */
 const createSepaFiles = async (folderPath, billSpec, billList) => {
-    createBillPdf(folderPath, billSpec, billList[0]); // just for testing here
-
     // compute date in the form 2024-01-19T12:19:23
     var date = new Date();
     var dateStr = date.toISOString().split('T')[0];
@@ -134,14 +146,16 @@ const createSepaFiles = async (folderPath, billSpec, billList) => {
     // compute the checksum
     var chkSum = 0;
     for(var i = 0; i < billList.length; i++) {
+        if(!isValidBill(billList[i])) {
+            continue;
+        }
         chkSum += billList[i]['amount'];
     }
 
-    var root = builder.create('Document', {
-        'xmlns': 'urn:iso:std:iso:20022:tech:xsd:pain.008.002.02',
-        'xmlns:xsi': 'http://www.w3.org/2001/XMLSchema-instance',
-        'xsi:schemaLocation': 'urn:iso:std:iso:20022:tech:xsd:pain.008.002.02 pain.008.002.02.xsd'
-    });
+    var root = builder.create('Document');
+    root.attribute('xmlns:xsi', 'http://www.w3.org/2001/XMLSchema-instance');
+    root.attribute('xsi:schemaLocation', 'urn:iso:std:iso:20022:tech:xsd:pain.008.002.02 pain.008.002.02.xsd');
+    root.attribute('xmlns', 'urn:iso:std:iso:20022:tech:xsd:pain.008.002.02');
 
     var CstmrDrctDbtInitn = root.ele('CstmrDrctDbtInitn');
     var GrpHdr = CstmrDrctDbtInitn.ele('GrpHdr');
@@ -151,7 +165,7 @@ const createSepaFiles = async (folderPath, billSpec, billList) => {
     var InitgPty = GrpHdr.ele('InitgPty');
     InitgPty.ele('Nm', billSpec['accountName']);
     var PmtInf = CstmrDrctDbtInitn.ele('PmtInf');
-    PmtInf.ele('PmtInfId', 'PaymentInfo1'); // just a unique id
+    PmtInf.ele('PmtInfId', generateRandomString(20)); // just a unique id
     PmtInf.ele('PmtMtd', 'DD');
     PmtInf.ele('NbOfTxs', billList.length);
     PmtInf.ele('CtrlSum', transformAmount(chkSum));
@@ -180,7 +194,17 @@ const createSepaFiles = async (folderPath, billSpec, billList) => {
     var schmeNm = othr.ele('SchmeNm');
     schmeNm.ele('Prtry', 'SEPA');
 
+    var invalidBills = [];
     for(var i = 0; i < billList.length; i++) {
+        var validityCheck = isValidBill(billList[i]);
+        if(!validityCheck.result) {
+            invalidBills.push({
+                bill: billList[i],
+                iban: validityCheck.iban ? "ok" : "bad",
+                bic: validityCheck.bic ? "ok" : "bad",
+            });
+            continue;
+        }
         addPaymentInfo(PmtInf, billSpec, billList[i]);
     }
     
@@ -188,6 +212,11 @@ const createSepaFiles = async (folderPath, billSpec, billList) => {
     // Assuming folderPath is a string representing the directory where you want to save the file
     var filePath = path.join(folderPath, 'sepa.xml');
     fs.writeFileSync(filePath, xmlString);
+
+    if(invalidBills.length > 0) {
+        var invalidBillsPath = path.join(folderPath, 'invalidBills.json');
+        fs.writeFileSync(invalidBillsPath, JSON.stringify(invalidBills, null, 2));
+    }
 }
 
 /*
@@ -205,7 +234,7 @@ const addPaymentInfo = function(paymentRoot, billSpec, bill) {
     var DrctDbtTxInf = paymentRoot.ele('DrctDbtTxInf');
     
     var PmtId = DrctDbtTxInf.ele('PmtId');
-    PmtId.ele('EndToEndId', bill['id']);
+    PmtId.ele('EndToEndId', generateRandomString(25)); // bill['id']
     
     var InstdAmt = DrctDbtTxInf.ele('InstdAmt', transformAmount(bill['amount']));
     InstdAmt.att('Ccy', 'EUR');
@@ -232,6 +261,19 @@ const addPaymentInfo = function(paymentRoot, billSpec, bill) {
     return bill['amount'];
 }
 
+function generateRandomString(length) {
+    var chars = 'abcdefghijklmnopqrstuvwxyz0123456789';
+    var result = '';
+    for (var i = 0; i < length; i++) {
+        result += chars[Math.floor(Math.random() * chars.length)];
+    }
+    return result;
+}
+
+const formatTaxRate = (taxrate) => {
+    return (taxrate*100) + " %";
+}
+
 const transformAmount = (amount) => {
     return (amount/100).toFixed(2);
 }
@@ -239,6 +281,24 @@ const transformAmount = (amount) => {
 const transformIban = (iban) => {
     // remove everything that is not a number or a letter
     return iban.replace(/[^a-zA-Z0-9]/g, '');
+}
+
+function isValidBill(bill) {
+    return {
+        result: isValidIban(bill.iban) && isValidBic(bill.bic),
+        iban: isValidIban(bill.iban),
+        bic: isValidBic(bill.bic)
+    }
+}
+
+function isValidIban(iban) {
+    var ibanRegex = /^[A-Z]{2}[0-9]{2}[A-Z0-9]{1,30}$/;
+    return ibanRegex.test(iban);
+}
+
+function isValidBic(bic) {
+    var bicRegex = /^[A-Z]{6}[A-Z0-9]{2}([A-Z0-9]{3})?$/;
+    return bicRegex.test(bic);
 }
 
 module.exports = { createBillFolder, storeBillData, createBillPdf, createSepaFiles };

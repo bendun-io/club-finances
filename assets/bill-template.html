@@ -24,8 +24,12 @@
             .content {
                 position: fixed;
                 left: 25mm;
-                width: 185mm; /* 210-25 = 185 */
+                width: 160mm; /* 210-2*25 = 160 */
                 top: 120mm;
+                font-size: 12;
+            }
+            .content > * {
+                font-size: 12;
             }
             .sender {
                 position: fixed;
@@ -33,9 +37,11 @@
                 top: 62mm;
                 width: 90mm;
                 text-align: right;
+                font-size: 12;
             }
             .sender > * {
                 text-align: right;
+                font-size: 12;
             }
             .footer {
                 position: fixed;
@@ -80,7 +86,7 @@
                 </table>
                 <br />
                 <br />
-                Rechnung Nr. ###BillNumber#### | Seite 1 von 1
+                Rechnung Nr. ###BillNumber### | Seite 1 von 1
             </div>
 
             <div class="sender">
@@ -100,13 +106,13 @@
                     </tr>
                     <tr>
                         <td>Rechnung Nr.:</td>
-                        <td>###BillNumber####</td>
+                        <td>###BillNumber###</td>
                     </tr>
                 </table>
             </div>
 
             <div class="content">
-                <h2>Rechnung</h2>
+                <h2>Rechnung ###BillNumber###</h2>
                 <br />
                 <p>###Description###</p>
                 <br />
@@ -119,6 +125,7 @@
                         <td style="width: 15%;"><b>Gesamt</b></td>
                     </thead>
                     ###POSITIONS###
+                    <tr><td>1</td><td>1<td>###POSITION_DESC###</td><td>###POSITION_TOTAL###</td><td>###POSITION_TOTAL###</td></tr>
                     <tr>
                         <td>&nbsp;</td><td></td><td></td><td></td><td></td>
                     </tr>

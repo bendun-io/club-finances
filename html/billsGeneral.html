@@ -16,8 +16,18 @@
         <fieldset style="margin-bottom: 1em;">
             <legend>Kontodaten und Rechnungsliste</legend>
             <div>
-                Rechnungsdaten (<a href="assets/template-general.xlsx">Vorlage</a>): <input type="file" id="billingExcel"
+                Rechnungsdaten: <input type="file" id="billingExcel"
                     accept=".xls,.xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel" />
+            </div>
+            <div>Vorlagen:
+                <ul>
+                    <li><a href="assets/template-general.xlsx">Nur SEPA Mandat</a></li>
+                    <li><a href="assets/template-rechnung.xlsx">SEPA Mandat und PDF Rechnungen</a></li>
+                </ul>
+            </div>
+            <div>
+                <input type="checkbox" id="createPDF" checked>
+                <label for="createPDF">PDF Rechnungen erstellen</label>
             </div>
         </fieldset>
         <input type="button" value="SEPA Einzug erstellen" id="createBill">
@@ -27,11 +37,11 @@
 <div id="progressPanel" style="display: none;">
     <ul id="finishedTasks">
         <style>
-            li {
+            #finishedTasks li {
                 list-style-type: none;
             }
 
-            li::before {
+            #finishedTasks li::before {
                 content: "\2713\0020";
                 /* Unicode character for a check mark, followed by a space */
                 color: green;

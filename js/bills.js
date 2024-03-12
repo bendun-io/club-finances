@@ -144,11 +144,13 @@ const createSepaFiles = async (folderPath, billSpec, billList) => {
     var creationDate = dateStr + 'T' + timeStr;
 
     // compute the checksum
+    var numValidBills = 0;
     var chkSum = 0;
     for(var i = 0; i < billList.length; i++) {
-        if(!isValidBill(billList[i])) {
+        if(!isValidBill(billList[i]).result) {
             continue;
         }
+        numValidBills += 1;
         chkSum += billList[i]['amount'];
     }
 
@@ -161,13 +163,13 @@ const createSepaFiles = async (folderPath, billSpec, billList) => {
     var GrpHdr = CstmrDrctDbtInitn.ele('GrpHdr');
     GrpHdr.ele('MsgId', "CLUBSEPA 1.0 " + creationDate);
     GrpHdr.ele('CreDtTm', creationDate);
-    GrpHdr.ele('NbOfTxs', billList.length);
+    GrpHdr.ele('NbOfTxs', numValidBills);
     var InitgPty = GrpHdr.ele('InitgPty');
     InitgPty.ele('Nm', billSpec['accountName']);
     var PmtInf = CstmrDrctDbtInitn.ele('PmtInf');
     PmtInf.ele('PmtInfId', generateRandomString(20)); // just a unique id
     PmtInf.ele('PmtMtd', 'DD');
-    PmtInf.ele('NbOfTxs', billList.length);
+    PmtInf.ele('NbOfTxs', numValidBills);
     PmtInf.ele('CtrlSum', transformAmount(chkSum));
     var PmtTpInf = PmtInf.ele('PmtTpInf');
     var SvcLvl = PmtTpInf.ele('SvcLvl');

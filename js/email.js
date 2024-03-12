@@ -13,11 +13,16 @@ const sendEmail = async (email, name, message) => {
         auth: {
             user: settings.email.account,
             pass: settings.email.password
+        },
+        debug: true,
+        tls: {
+            ciphers:'SSLv3',
+            rejectUnauthorized: false // do not fail on invalid certs
         }
     });
 
     let mailOptions = {
-        from: 'it-admin@round-table.de', // sender address
+        from: `"${settings.orgname}" <${settings.email.account}>`, // sender address
         to: email, // list of receivers
         subject: name, // Subject line
         text: message, // plain text body

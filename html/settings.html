@@ -26,5 +26,15 @@
         <input type="button" value="Add one more bank account" id="addBankDetailsButton" />
     </div>
 
+    <fieldset>
+        <legend>E-Mail Settings</legend>
+        <input type="text" name="emailsender" placeholder="E-Mail Account" /><br />
+        <input type="password" name="emailpassword" placeholder="Password" /><br />
+        <hr />
+        E-Mail Testing:
+        <input type="text" placeholder="test@test.de" id="testEmail" name="testEmail" /><br />
+        <input type="button" value="Send Test E-Mail" onClick="onSendTestEmailClick()" id="sendTestEmailButton" />
+    </fieldset>
+
     <input type="button" value="Save" onClick="onSaveSettingsClick()" id="saveSettingsButton" />
 </form>

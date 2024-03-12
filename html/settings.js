@@ -15,6 +15,9 @@ window.init = () => {
             document.querySelector('input[name="treasurer_email"]').value = settings.treasurer_email ?? '';
             document.querySelector('input[name="treasurer_phone"]').value = settings.treasurer_phone ?? '';
 
+            document.querySelector('input[name="emailsender"]').value = settings.email.account ?? '';
+            document.querySelector('input[name="emailpassword"]').value = settings.email.password ?? '';
+
             if (settings.bankDetails) {
                 initBankDetails(settings.bankDetails);
             } else {
@@ -23,6 +26,7 @@ window.init = () => {
         }
     );
     document.getElementById('addBankDetailsButton').addEventListener('click', addBankDetails);
+    document.getElementById('sendTestEmailButton').addEventListener('click', onSendTestEmailButtonClick);
 }
 
 var maxId = 0;
@@ -56,4 +60,34 @@ const getDetailsDiv = (id, accountName, institute, iban, bic, gleaubigerId) => {
         <input type="button" value="X" onclick="document.getElementById('bankDetails${id}').remove()" />
         `;
     return bankDetailsDiv;
+}
+
+const onSendTestEmailButtonClick = async () => {
+    let testEmailButton = document.getElementById('sendTestEmailButton');
+    let receiver = document.querySelector('input[name="testEmail"]').value;
+    
+    // Regular expression for email validation
+    let emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+    if (emailRegex.test(receiver)) {
+        testEmailButton.disabled = true; // disable the button
+
+        window.email.sendTestMail(receiver).then(
+            (rslt) => {
+                if(rslt.success) {
+                    alert('Test email successfully sent to ' + receiver);
+                } else {
+                    alert("Error sendin testmail: " + rslt.error);
+                }
+                testEmailButton.disabled = false; // enable the button
+            },
+            (error) => {
+                alert('Error sending test email: ' + error);
+                testEmailButton.disabled = false; // enable the button
+            }
+        );
+        
+    } else {
+        alert('Invalid email address: ' + receiver);
+    }
 }

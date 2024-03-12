@@ -188,8 +188,8 @@ const createSepaFiles = async (folderPath, billSpec, billList) => {
 
     var cdtrSchmeId = PmtInf.ele('CdtrSchmeId');
     var id = cdtrSchmeId.ele('Id');
-    id.ele('PrvtId', 'Othr');
-    var othr = id.ele('Othr');
+    var prvtId = id.ele('PrvtId');
+    var othr = prvtId.ele('Othr');
     othr.ele('Id', billSpec['gleaubigerId']);
     var schmeNm = othr.ele('SchmeNm');
     schmeNm.ele('Prtry', 'SEPA');
@@ -292,8 +292,21 @@ function isValidBill(bill) {
 }
 
 function isValidIban(iban) {
-    var ibanRegex = /^[A-Z]{2}[0-9]{2}[A-Z0-9]{1,30}$/;
-    return ibanRegex.test(iban);
+    var ibanRegex = /^([A-Z]{2})(\d{2})([A-Z\d]{1,30})$/;
+    var match = iban.match(ibanRegex);
+    if (match) {
+        var country = match[1];
+        var checksum = match[2];
+        var bban = match[3];
+        var numericIban = (bban + country + checksum).toUpperCase();
+        numericIban = numericIban.replace(/[A-Z]/g, function(letter) {
+            return letter.charCodeAt(0) - 55;
+        });
+        var remainder = BigInt(numericIban) % 97n;
+        return remainder === 1n;
+    } else {
+        return false;
+    }
 }
 
 function isValidBic(bic) {

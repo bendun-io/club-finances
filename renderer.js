@@ -63,6 +63,8 @@ const toggleMenuInit = () => {
                 });
         });
     }
+
+    document.getElementById("menuHome").click();
 };
 
 const onSaveSettingsClick = async function () {
@@ -78,6 +80,9 @@ const onSaveSettingsClick = async function () {
     var treasurer_email = document.querySelector('input[name="treasurer_email"]').value.toString();
     var treasurer_phone = document.querySelector('input[name="treasurer_phone"]').value.toString();
 
+    var emailsender = document.querySelector('input[name="emailsender"]').value.toString();
+    var emailpassword = document.querySelector('input[name="emailpassword"]').value.toString();
+
     var settings = {
         username: username,
         password: password,
@@ -90,7 +95,12 @@ const onSaveSettingsClick = async function () {
         treasurer_postal: treasurer_postal,
         treasurer_city: treasurer_city,
         treasurer_email: treasurer_email,
-        treasurer_phone: treasurer_phone
+        treasurer_phone: treasurer_phone,
+
+        email: {
+            account: emailsender,
+            password: emailpassword
+        }
     };
 
     for (let bankDetails of document.querySelectorAll('.bankDetails')) {

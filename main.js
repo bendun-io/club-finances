@@ -3,8 +3,8 @@
 const { app, BrowserWindow, ipcMain } = require('electron')
 const { saveSettings, loadSettings } = require('./js/settings')
 const { loadExcelFile } = require('./js/excel')
-const { createBillFolder, createBillPdf, createSepaFiles } = require('./js/bills')
-const { getProjects } = require('./js/projects.js')
+const { createBillPdf, createSepaFiles } = require('./js/bills')
+const { getProjects, createProjectFolder } = require('./js/projects.js')
 const { testEmail } = require('./js/email.js')
 const path = require('node:path')
 
@@ -26,7 +26,7 @@ const createWindow = () => {
     ipcMain.handle('saveSettings', (_event, settings) => saveSettings(settings));
     ipcMain.handle('loadSettings', () => loadSettings());
     ipcMain.handle('loadExcelFile', (_event, path) => loadExcelFile(path));
-    ipcMain.handle('createBillFolder', () => createBillFolder());
+    ipcMain.handle('createBillFolder', () => createProjectFolder());
     ipcMain.handle('createBillPdf', (_event, folderPath, billSpec, bill) => createBillPdf(folderPath, billSpec, bill)),
     ipcMain.handle('createBillPdfFiles', (_event, folderPath, billSpec, billList) => createBillPdfFiles(folderPath, billSpec, billList)),
     ipcMain.handle('createSepaFiles', (_event, folderPath, billSpec, billList) => createSepaFiles(folderPath, billSpec, billList)),

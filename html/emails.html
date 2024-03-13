@@ -1,0 +1,69 @@
+<h1>E-Mails versenden</h1>
+
+<div>
+    <form id="details">
+        <fieldset style="margin-bottom: 1em;">
+            <legend>E-Mail Konfiguration</legend>
+            <div id="emailInfo"></div>
+            <input type="text" id="subject" name="subject" placeholder="Betreff" /><br />
+            <input type="text" id="cc" name="cc" placeholder="Cc" /><br />
+            <textarea id="body" name="body" placeholder="Nachricht" style="width: 100%; height: 200px;"></textarea>
+        </fieldset>
+        <fieldset style="margin-bottom: 1em;">
+            <legend>Empfänger und Anhänge</legend>
+            <div>
+                Ordner mit Excel und Rechnungen 
+                <input type="file" id="receiverFolder" webkitdirectory />
+            </div>
+            <div id="receiverInfo"></div>
+        </fieldset>
+        <input type="button" value="Testmail Senden" id="sendTestMail">
+        <input type="button" value="E-Mails Senden" id="sendMails" disabled>
+    </form>
+</div>
+
+<div id="progressPanel" style="display: none;">
+    <ul id="finishedTasks">
+        <style>
+            #finishedTasks li {
+                list-style-type: none;
+            }
+
+            #finishedTasks li::before {
+                content: "\2713\0020";
+                /* Unicode character for a check mark, followed by a space */
+                color: green;
+            }
+        </style>
+    </ul>
+    <ul>
+        <style>
+            @keyframes spin {
+                0% {
+                    transform: rotate(0deg);
+                }
+
+                100% {
+                    transform: rotate(360deg);
+                }
+            }
+
+            #currentTask::before {
+                content: "";
+                display: inline-block;
+                width: 16px;
+                height: 16px;
+                border: 2px solid #f3f3f3;
+                border-top: 2px solid #3498db;
+                border-radius: 50%;
+                animation: spin 2s linear infinite;
+            }
+        </style>
+        <li id="currentTask"></li>
+    </ul>
+</div>
+
+<div id="errorPanel" style="display: none;">
+    Errors:<br />
+    <textarea id="errorlog" style="width: 100%; height: 200px;"></textarea>
+</div>

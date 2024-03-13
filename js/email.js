@@ -26,6 +26,7 @@ const sendEmail = async (email, name, message) => {
         to: email, // list of receivers
         subject: name, // Subject line
         text: message, // plain text body
+        replyTo: settings.treasurer_email, // email address for replies
     };
 
     try {

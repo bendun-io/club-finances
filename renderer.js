@@ -4,6 +4,7 @@ const navigationMap = {
     "TransactionCollection": "html/transactionCollection.html",
     "Bills": "html/bills.html",
     "BillsGeneral": "html/billsGeneral.html",
+    "Emails": "html/emails.html",
 }
 
 const initLoadedPage = (filename) => {

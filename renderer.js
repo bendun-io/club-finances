@@ -55,6 +55,10 @@ const toggleMenuInit = () => {
     });
     // for every navagation map entry add a event listener to load the page into the content div
     for (const [key, value] of Object.entries(navigationMap)) {
+        if(document.getElementById("menu" + key) == null) {
+            console.log("menu" + key + " not found");
+            continue;
+        }
         document.getElementById("menu" + key).addEventListener('click', function () {
             fetch(value)
                 .then(response => response.text())

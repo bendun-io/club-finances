@@ -6,21 +6,28 @@
             <legend>E-Mail Konfiguration</legend>
             <div id="emailInfo"></div>
             <input type="text" id="subject" name="subject" placeholder="Betreff" /><br />
-            <input type="text" id="cc" name="cc" placeholder="Cc" /><br />
+            <input type="text" id="cc" name="cc" placeholder="Cc" />(Bei mehreren mit ; trennen)<br />
             <textarea id="body" name="body" placeholder="Nachricht" style="width: 100%; height: 200px;"></textarea>
         </fieldset>
         <fieldset style="margin-bottom: 1em;">
             <legend>Empfänger und Anhänge</legend>
             <div>
-                Ordner mit Excel und Rechnungen 
-                <input type="file" id="receiverFolder" webkitdirectory />
+                Empfänger: <input type="file" id="billingExcel"
+                    accept=".xls,.xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel" />
+            </div>
+            <div>
+                Ordner mit Anhängen:
+                <input type="button" id="receiverFolder" value="Ordner wählen" /><div id="receiverFolderSelected">Kein Ordner ausgewählt</div>
             </div>
             <div id="receiverInfo"></div>
+            <input type="email" id="testmail" placeholder="Testmail Empfänger" />
         </fieldset>
         <input type="button" value="Testmail Senden" id="sendTestMail">
         <input type="button" value="E-Mails Senden" id="sendMails" disabled>
     </form>
 </div>
+
+<div id="example"></div>
 
 <div id="progressPanel" style="display: none;">
     <ul id="finishedTasks">

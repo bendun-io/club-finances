@@ -92,11 +92,15 @@ const createBillPdf = async (folderPath, billSpec, bill) => {
         document.documentElement.innerHTML = content;
     }, billSpec, bill, htmlErrorString);
 
-    var billName = 'bill-'+bill['id']+'.pdf';
+    var billName = generateBillFileName(bill);
     const pdfPath = path.join(folderPath, billName);
     await page.pdf({path: pdfPath, format: 'A4', printBackground: true});
 
     await browser.close();
+}
+
+const generateBillFileName = (bill) => {
+    return 'bill-' + bill['id'] + '.pdf';
 }
 
 /* Assumes that billList is an array with of bills fitting the addPayment method and 
@@ -288,4 +292,4 @@ function isValidBic(bic) {
     return bicRegex.test(bic);
 }
 
-module.exports = { storeBillData, createBillPdf, createSepaFiles };
+module.exports = { storeBillData, createBillPdf, createSepaFiles, generateBillFileName };

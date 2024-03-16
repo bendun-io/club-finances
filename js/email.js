@@ -1,8 +1,18 @@
 const nodemailer = require('nodemailer');
 const { loadSettings } = require('./settings');
+const fs = require('fs');
+const os = require('os');
+const path = require('path');
 
-const sendEmail = async (email, name, message) => {
-    console.log('sendEmail', email, name, message);
+
+const sendEmail = async (options) => {
+    var email = options.email.trim();
+    var subject = options.subject.trim();
+    var message = options.message.trim();
+    var attachments = options.attachments ?? [];
+    var cc = options.cc ?? '';
+
+    console.log('sendEmail', email, subject, message);
 
     var settings = loadSettings();
 
@@ -24,10 +34,13 @@ const sendEmail = async (email, name, message) => {
     let mailOptions = {
         from: `"${settings.orgname}" <${settings.email.account}>`, // sender address
         to: email, // list of receivers
-        subject: name, // Subject line
+        cc: cc, // CC receiver
+        subject: subject, // Subject line
         text: message, // plain text body
         replyTo: settings.treasurer_email, // email address for replies
+        attachments: attachments
     };
+
 
     try {
         let info = await transporter.sendMail(mailOptions);
@@ -39,8 +52,22 @@ const sendEmail = async (email, name, message) => {
     }
 }
 
-const testEmail = async (receiver) => {
-    return sendEmail(receiver, 'Test email', 'This is a test email from your clubfinance electron app');
+const testEmail = async (receiver, addAttachement=false) => {
+    const filePath = path.join(os.homedir(), 'test.txt');
+    fs.writeFileSync(filePath, 'This is a test email attachement from your clubfinance electron app');
+
+    var attachment = {
+        filename: 'test.txt',
+        path: filePath
+    }
+    
+    var options = {
+        email: receiver,
+        subject: 'Test email',
+        message: 'This is a test email from your clubfinance electron app',
+        attachments: addAttachement ? [attachment] : []
+    }
+    return sendEmail(options);
 }
 
 module.exports = { sendEmail, testEmail };

@@ -4,8 +4,8 @@ const { app, BrowserWindow, ipcMain } = require('electron')
 const { saveSettings, loadSettings } = require('./js/settings')
 const { loadExcelFile } = require('./js/excel')
 const { createBillPdf, createSepaFiles } = require('./js/bills')
-const { getProjects, createProjectFolder } = require('./js/projects.js')
-const { testEmail } = require('./js/email.js')
+const { getProjects, createProjectFolder, selectFolder } = require('./js/projects.js')
+const { sendEmail, testEmail } = require('./js/email.js')
 const path = require('node:path')
 
 const createWindow = () => {
@@ -30,8 +30,12 @@ const createWindow = () => {
     ipcMain.handle('createBillPdf', (_event, folderPath, billSpec, bill) => createBillPdf(folderPath, billSpec, bill)),
     ipcMain.handle('createBillPdfFiles', (_event, folderPath, billSpec, billList) => createBillPdfFiles(folderPath, billSpec, billList)),
     ipcMain.handle('createSepaFiles', (_event, folderPath, billSpec, billList) => createSepaFiles(folderPath, billSpec, billList)),
+    
     ipcMain.handle('getProjects', () => getProjects() );
-    ipcMain.handle('testEmail', (_event, receiver) => testEmail(receiver));
+    ipcMain.handle('selectFolder', () => selectFolder() );
+    
+    ipcMain.handle('testEmail', (_event, receiver, includeAttachement) => testEmail(receiver, includeAttachement));
+    ipcMain.handle('sendEmail', (_event, options) => sendEmail(options));
 
     createWindow()
 

@@ -1,6 +1,8 @@
 const fs = require('fs');
 const path = require('path');
 const os = require('os');
+const { dialog } = require('electron');
+
 
 const createProjectFolder = () => {
     // get uuid and create a folder with that uuid in the os.homedir()
@@ -45,4 +47,17 @@ const getProjects = () => {
     return validProjects;
 }
 
-module.exports = { getProjects, createProjectFolder };
+
+const selectFolder = async () => {
+    const result = await dialog.showOpenDialog({ properties: ['openDirectory'] });
+    if (!result.canceled && result.filePaths.length > 0) {
+        const folderPath = result.filePaths[0];
+        const files = fs.readdirSync(folderPath);
+        const filePaths = files.map(file => path.join(folderPath, file));
+        
+        return {path: folderPath, files: filePaths};
+    }
+    return null;
+}
+
+module.exports = { getProjects, createProjectFolder, selectFolder };

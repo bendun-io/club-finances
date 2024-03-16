@@ -12,9 +12,11 @@ contextBridge.exposeInMainWorld('storage', {
   createBillPdfFiles: (folderPath, billSpec, billList) => ipcRenderer.invoke('createBillPdfFiles', folderPath, billSpec, billList),
   createSepaFiles: (folderPath, billSpec, billList) => ipcRenderer.invoke('createSepaFiles', folderPath, billSpec, billList),
   getProjects: () => ipcRenderer.invoke('getProjects'),
+  selectFolder: () => ipcRenderer.invoke('selectFolder'),
 })
 
 
 contextBridge.exposeInMainWorld('email', {
-  sendTestMail: (receiver) => ipcRenderer.invoke('testEmail', receiver),
+  sendTestMail: (receiver, includeAttachement) => ipcRenderer.invoke('testEmail', receiver, includeAttachement),
+  sendEmail: (options) => ipcRenderer.invoke('sendEmail', options),
 })

@@ -65,14 +65,15 @@ const getDetailsDiv = (id, accountName, institute, iban, bic, gleaubigerId) => {
 const onSendTestEmailButtonClick = async () => {
     let testEmailButton = document.getElementById('sendTestEmailButton');
     let receiver = document.querySelector('input[name="testEmail"]').value;
-    
+    let includeAttachement = document.getElementById('includeAttachment').checked;
+
     // Regular expression for email validation
     let emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
     if (emailRegex.test(receiver)) {
         testEmailButton.disabled = true; // disable the button
 
-        window.email.sendTestMail(receiver).then(
+        window.email.sendTestMail(receiver, includeAttachement).then(
             (rslt) => {
                 if(rslt.success) {
                     alert('Test email successfully sent to ' + receiver);

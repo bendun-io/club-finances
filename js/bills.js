@@ -13,6 +13,16 @@ const storeBillData = (folderPath, billData) => {
     fs.writeFileSync(billDataPath, JSON.stringify(billData, null, 2));
 }
 
+const formatBillDate = (date) => {	
+    try {
+        var dateObj = new Date(date);
+        // format the object to show DD.MM.YYYY
+        return dateObj.getDate() + '.' + (dateObj.getMonth() + 1) + '.' + dateObj.getFullYear();
+    } catch (error) {
+        console.log(error);
+        return date;
+    }
+}
 
 const htmlErrorString = "<b style='color: red;'>MISSING</b>";
 /*
@@ -46,12 +56,18 @@ const createBillPdf = async (folderPath, billSpec, bill) => {
     bill["totalNet"] = (bill["amount"] / (1 + bill["taxrate"])).toFixed(2);
     bill["taxvalue"] = bill["total"] - bill["totalNet"];
 
+    bill['menge'] = bill['menge'].toFixed(0) ?? 1;
+    bill['singleNet'] = bill['totalNet'] / bill['menge'];
+
     // only string formatting after this point
     bill["total"] = transformAmount(bill["total"]);
     bill["totalNet"] = transformAmount(bill["totalNet"]);
     bill["taxvalue"] = transformAmount(bill["taxvalue"]);
+    bill['singleNet'] = transformAmount(bill['singleNet']);
     bill["positions"] = ""; // "<tr><td>1</td><td>1<td>" + bill["position"] + "</td><td>" + bill["totalNet"]  + "</td><td>" + bill["totalNet"]  + "</td></tr>";
     bill["taxrate"] = formatTaxRate(bill["taxrate"]);
+
+    bill['billdate'] = formatBillDate(bill['billdate']);
 
     await page.evaluate((billSpec, bill, htmlErrorString) => {
         let content = document.documentElement.innerHTML;
@@ -73,8 +89,10 @@ const createBillPdf = async (folderPath, billSpec, bill) => {
 
             
         content = content.replaceAll("###BillNumber###", bill["billnumber"] ?? htmlErrorString)
+            .replaceAll("###POSITION_AMOUNT###", bill["menge"] ?? 1)
             .replaceAll("###POSITIONS###", bill["positions"] ?? htmlErrorString)
             .replaceAll("###POSITION_DESC###", bill["position"] ?? htmlErrorString)
+            .replaceAll("###POSITION_SINGLE###", bill['singleNet'] ?? htmlErrorString)
             .replaceAll("###POSITION_TOTAL###", bill['totalNet'] ?? htmlErrorString)
             .replaceAll("###BillDate###", bill['billdate'] ?? htmlErrorString)
             .replaceAll("###SEPAMANDAT###", bill["mandateId"] ?? htmlErrorString)
@@ -249,7 +267,7 @@ function generateRandomString(length) {
 }
 
 const formatTaxRate = (taxrate) => {
-    return (taxrate*100) + " %";
+    return (taxrate*100).toFixed(0) + " %";
 }
 
 const transformAmount = (amount) => {

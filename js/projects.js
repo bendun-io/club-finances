@@ -1,7 +1,8 @@
 const fs = require('fs');
 const path = require('path');
 const os = require('os');
-const { dialog } = require('electron');
+const { dialog, shell } = require('electron');
+const { v4: uuidv4 } = require('uuid');
 
 
 const createProjectFolder = () => {

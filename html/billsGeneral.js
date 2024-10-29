@@ -54,7 +54,15 @@ const createBill = () => {
     billFolder.then(
         (folderPath) => {
             finishTask("Ordner erstellt: " + folderPath);
-            createPdfAndSepa(folderPath);
+            createPdfAndSepa(folderPath).then(
+                (validity) => {
+                    if(validity.valid) {
+                        finishTask("Rechnungen und SEPA Dateien erstellt");
+                    } else {
+                        addToErrors("Fehler beim Erstellen der Rechnungen und SEPA Dateien: " + JSON.stringify(validity.results));
+                    }
+                }
+            );
         }
     );
 }

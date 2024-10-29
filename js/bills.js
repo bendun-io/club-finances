@@ -5,6 +5,7 @@ const { v4: uuidv4 } = require('uuid');
 const { shell } = require('electron');
 const builder = require('xmlbuilder');
 const puppeteer = require('puppeteer');
+const libxmljs = require('libxmljs2');
 
 
 const storeBillData = (folderPath, billData) => {
@@ -208,11 +209,15 @@ const createSepaFiles = async (folderPath, billSpec, billList) => {
     // Assuming folderPath is a string representing the directory where you want to save the file
     var filePath = path.join(folderPath, 'sepa.xml');
     fs.writeFileSync(filePath, xmlString);
-
+    
     if(invalidBills.length > 0) {
         var invalidBillsPath = path.join(folderPath, 'invalidBills.json');
         fs.writeFileSync(invalidBillsPath, JSON.stringify(invalidBills, null, 2));
     }
+
+    // test sepa file
+    var sepaValidity = checkSepaValidity(filePath);
+    return sepaValidity;
 }
 
 /*
@@ -276,7 +281,7 @@ const transformAmount = (amount) => {
 
 const transformIban = (iban) => {
     // remove everything that is not a number or a letter
-    return iban.replace(/[^a-zA-Z0-9]/g, '');
+    return iban.replace(/[^a-zA-Z0-9]/g, '').toUpperCase();
 }
 
 function isValidBill(bill) {
@@ -310,4 +315,74 @@ function isValidBic(bic) {
     return bicRegex.test(bic);
 }
 
-module.exports = { storeBillData, createBillPdf, createSepaFiles, generateBillFileName };
+function validateXmlAgainstXsd(xsdPath, xmlPath) {
+    try {
+        // Load the XSD schema file
+        const xsdContent = fs.readFileSync(xsdPath, 'utf8');
+        const xsdDoc = libxmljs.parseXml(xsdContent);
+
+        // Load the XML file
+        const xmlContent = fs.readFileSync(xmlPath, 'utf8');
+        const xmlDoc = libxmljs.parseXml(xmlContent);
+
+        // Validate XML against XSD
+        const isValid = xmlDoc.validate(xsdDoc);
+
+        // Check validation result
+        if (isValid) {
+            return {
+                valid: true,
+                schema: xsdPath
+            };
+        } else {
+            // errorlist = [];
+            // xmlDoc.validationErrors.forEach((error, index) => {
+            //     console.error(`Error ${index + 1}:`);
+            //     console.error(` - Line: ${error.line}`);
+            //     console.error(` - Column: ${error.column}`);
+            //     console.error(` - Message: ${error.message}`);
+            // });
+            return {
+                valid: false,
+                schema: xsdPath,
+                errors: xmlDoc.validationErrors
+            };
+        }
+    } catch (error) {
+        return {
+            valid: false,
+            schema: xsdPath,
+            errors: [
+                { line: 0, column: 0, message: 'An error occurred while validating the XML file:' + error.message }
+            ]
+        };
+    }
+}
+
+function checkSepaValidity(sepaPath) {
+    const xsdList = [
+        '001.001.03',
+        '001.003.03',
+        // '001.001.09', 
+        '008.001.02', 
+        '008.003.02',
+        // '008.001.08',
+        '008.002.02' // not accepted by bank any more
+    ];
+    var results = [];
+    var anyValid = false;
+    for(const xsd of xsdList) {
+        const xsdPath = path.join(__dirname, '..', 'schemas', `pain.${xsd}.xsd`);
+        const result = validateXmlAgainstXsd(xsdPath, sepaPath);
+        if (result.valid) {
+            anyValid = true;
+        }
+        results.push(result);
+    }
+    return {
+        valid: anyValid,
+        results: results
+    };
+}
+
+module.exports = { storeBillData, createBillPdf, createSepaFiles, generateBillFileName, checkSepaValidity };

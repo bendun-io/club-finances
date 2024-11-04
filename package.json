@@ -14,14 +14,14 @@
   },
   "homepage": "https://github.com/bendun-io/club-finances#readme",
   "devDependencies": {
-    "@electron-forge/cli": "^7.3.0",
-    "@electron-forge/maker-deb": "^7.4.0",
-    "@electron-forge/maker-rpm": "^7.4.0",
-    "@electron-forge/maker-squirrel": "^7.3.0",
-    "@electron-forge/maker-zip": "^7.3.0",
-    "@electron-forge/plugin-auto-unpack-natives": "^7.4.0",
-    "@electron-forge/publisher-github": "^7.4.0",
-    "electron": "^31.2.1"
+    "@electron-forge/cli": "^7.5.0",
+    "@electron-forge/maker-deb": "^7.5.0",
+    "@electron-forge/maker-rpm": "^7.5.0",
+    "@electron-forge/maker-squirrel": "^7.5.0",
+    "@electron-forge/maker-zip": "^7.5.0",
+    "@electron-forge/plugin-auto-unpack-natives": "^7.5.0",
+    "@electron-forge/publisher-github": "^7.5.0",
+    "electron": "^32.1.2"
   },
   "scripts": {
     "start": "electron-forge start",
@@ -34,8 +34,8 @@
     "electron-squirrel-startup": "^1.0.1",
     "exceljs": "^4.4.0",
     "libxmljs2": "^0.35.0",
-    "nodemailer": "^6.9.14",
-    "puppeteer": "^22.15.0",
+    "nodemailer": "^6.9.15",
+    "puppeteer": "^23.6.0",
     "update-electron-app": "^3.0.0",
     "uuid": "^10.0.0",
     "xmlbuilder": "^15.1.1"

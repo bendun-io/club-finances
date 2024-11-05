@@ -2,7 +2,7 @@
 
 const { app, BrowserWindow, ipcMain } = require('electron')
 const { saveSettings, loadSettings } = require('./js/settings')
-const { loadExcelFile } = require('./js/excel')
+const { loadExcelFile, selectExcelFile } = require('./js/excel')
 const { createBillPdf, createSepaFiles } = require('./js/bills')
 const { getProjects, createProjectFolder, selectFolder } = require('./js/projects.js')
 const { sendEmail, testEmail } = require('./js/email.js')
@@ -13,11 +13,11 @@ const createWindow = () => {
       width: 1920*0.8,
       height: 1080*0.8,
       webPreferences: {
-        preload: path.join(__dirname, 'preload.js')
+        preload: path.join(__dirname, 'preload.js'),
       },
       icon: path.join(__dirname, 'images', 'icon.png')
     })
-  
+
     win.loadFile('index.html')
     win.setMenuBarVisibility(false)
   }
@@ -36,6 +36,8 @@ const createWindow = () => {
     
     ipcMain.handle('testEmail', (_event, receiver, includeAttachement) => testEmail(receiver, includeAttachement));
     ipcMain.handle('sendEmail', (_event, options) => sendEmail(options));
+
+    ipcMain.handle('selectExcelFile', () => selectExcelFile() );
 
     createWindow()
 

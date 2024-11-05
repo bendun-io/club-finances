@@ -9,12 +9,14 @@ let theSettings = null;
 window.init = () => {
     document.getElementById('createBill').addEventListener('click', createBill);
 
-    document.getElementById('billingExcel').addEventListener('change', 
-        (event) => { onFileChange(event, storeBillData);  });
+    //document.getElementById('billingExcel').addEventListener('change', 
+    //    (event) => { onFileChange(event, storeBillData);  });
 
     document.getElementById('bankAccount').addEventListener('change', function(event) {
         selectedBankAccount = bankAccountMapping[event.target.value];
     });
+
+    document.getElementById('buttonTest').addEventListener('click', buttonTest);
 
     // for every bankaccount in the settings add a selection in bankAccount select
     window.storage.loadSettings().then(
@@ -33,6 +35,15 @@ window.init = () => {
             }
         }
     );
+}
+
+const buttonTest = () => {
+    window.fileselect.buttonTest().then(
+        (data) => {
+            console.log(data);
+            document.getElementById('buttonTestContent').innerHTML = data.filePaths[0].split('/').pop();
+            onFileChange(data.filePaths[0], storeBillData);
+        });
 }
 
 const getPdfCheckmark = () => {
@@ -150,10 +161,11 @@ const validateData = () => {
     return true;
 }
 
-const onFileChange = async (event, process) => {
-    const fileHandle = event.target.files[0];
-    excelFilename = fileHandle.name;
-    const content = await window.storage.loadExcelFile(fileHandle.path);
+const onFileChange = async (filepath, process) => {
+    //const fileHandle = event.target.files[0];
+    excelFilename = filepath.split('/').pop();
+    //excelFilename = fileHandle.name;
+    const content = await window.storage.loadExcelFile(filepath);
     process(content);
     // window.transactionCollection.excelData = content.slice(1);
 }

@@ -15,6 +15,12 @@ contextBridge.exposeInMainWorld('storage', {
   selectFolder: () => ipcRenderer.invoke('selectFolder'),
 })
 
+contextBridge.exposeInMainWorld('fileselect',
+  {
+    buttonTest: () => ipcRenderer.invoke('selectExcelFile') 
+  })
+
+
 
 contextBridge.exposeInMainWorld('email', {
   sendTestMail: (receiver, includeAttachement) => ipcRenderer.invoke('testEmail', receiver, includeAttachement),

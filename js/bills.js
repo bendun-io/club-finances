@@ -5,7 +5,7 @@ const { v4: uuidv4 } = require('uuid');
 const { shell } = require('electron');
 const builder = require('xmlbuilder');
 const puppeteer = require('puppeteer');
-const libxmljs = require('libxmljs2');
+//const libxmljs = require('libxmljs2');
 
 
 const storeBillData = (folderPath, billData) => {
@@ -215,9 +215,9 @@ const createSepaFiles = async (folderPath, billSpec, billList) => {
         fs.writeFileSync(invalidBillsPath, JSON.stringify(invalidBills, null, 2));
     }
 
-    // test sepa file
-    var sepaValidity = checkSepaValidity(filePath);
-    return sepaValidity;
+    // TODO test sepa file
+    //var sepaValidity = checkSepaValidity(filePath);
+    //return sepaValidity;
 }
 
 /*

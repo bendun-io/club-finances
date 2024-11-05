@@ -1,8 +1,14 @@
 const ExcelJS = require('exceljs');
+const { dialog } = require('electron');
 
+
+const selectExcelFile = () => {
+    return dialog.showOpenDialog({ properties: ['openFile'] });
+}
 
 const loadExcelFile = async (path) => {
     const workbook = new ExcelJS.Workbook();
+    console.log(path);
     await workbook.xlsx.readFile(path);
 
     const worksheet = workbook.worksheets[0];
@@ -19,4 +25,4 @@ const loadExcelFile = async (path) => {
     return jsonData;
 }
 
-module.exports = { loadExcelFile };
+module.exports = { loadExcelFile, selectExcelFile };

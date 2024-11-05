@@ -1,9 +1,14 @@
 const ExcelJS = require('exceljs');
 const { dialog } = require('electron');
 
+// https://www.electronjs.org/docs/latest/api/dialog#dialogshowopendialogwindow-options
+const fileFilters = [
+    { name: 'Excel Files', extensions: ['xlsx', 'xls'] },
+    { name: 'All Files', extensions: ['*'] }
+]
 
 const selectExcelFile = () => {
-    return dialog.showOpenDialog({ properties: ['openFile'] });
+    return dialog.showOpenDialog({ properties: ['openFile'], filters: fileFilters });
 }
 
 const loadExcelFile = async (path) => {

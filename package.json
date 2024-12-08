@@ -36,6 +36,7 @@
     "puppeteer": "^23.6.0",
     "update-electron-app": "^3.0.0",
     "uuid": "^10.0.0",
-    "xmlbuilder": "^15.1.1"
+    "xmlbuilder": "^15.1.1",
+    "xsd-schema-validator": "^0.10.0"
   }
 }

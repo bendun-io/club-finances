@@ -3,10 +3,12 @@ const path = require('path');
 const os = require('os');
 const { v4: uuidv4 } = require('uuid');
 const { shell } = require('electron');
-const builder = require('xmlbuilder');
+// const builder = require('xmlbuilder');
 const puppeteer = require('puppeteer');
-//const libxmljs = require('libxmljs2');
+const validator = require('xsd-schema-validator');
 
+const sepaFactory = require("./sepa/sepafactory");
+const { isValidBill, transformAmount } = require("./sepa/helper");
 
 const storeBillData = (folderPath, billData) => {
     // create a file called billData.json with the billData in the folder
@@ -57,7 +59,11 @@ const createBillPdf = async (folderPath, billSpec, bill) => {
     bill["totalNet"] = (bill["amount"] / (1 + bill["taxrate"])).toFixed(2);
     bill["taxvalue"] = bill["total"] - bill["totalNet"];
 
-    bill['menge'] = bill['menge'].toFixed(0) ?? 1;
+    try {
+        bill['menge'] = bill['menge'].toFixed(0) ?? 1;
+    } catch {
+        bill['menge'] = 1;
+    }
     bill['singleNet'] = bill['totalNet'] / bill['menge'];
 
     // only string formatting after this point
@@ -132,65 +138,7 @@ that billSpec has the following structure:
 }
 */
 const createSepaFiles = async (folderPath, billSpec, billList) => {
-    // compute date in the form 2024-01-19T12:19:23
-    var date = new Date();
-    var dateStr = date.toISOString().split('T')[0];
-    var timeStr = date.toTimeString().split(' ')[0];
-    var creationDate = dateStr + 'T' + timeStr;
-
     // compute the checksum
-    var numValidBills = 0;
-    var chkSum = 0;
-    for(var i = 0; i < billList.length; i++) {
-        if(!isValidBill(billList[i]).result) {
-            continue;
-        }
-        numValidBills += 1;
-        chkSum += billList[i]['amount'];
-    }
-
-    var root = builder.create('Document');
-    root.attribute('xmlns:xsi', 'http://www.w3.org/2001/XMLSchema-instance');
-    root.attribute('xsi:schemaLocation', 'urn:iso:std:iso:20022:tech:xsd:pain.008.002.02 pain.008.002.02.xsd');
-    root.attribute('xmlns', 'urn:iso:std:iso:20022:tech:xsd:pain.008.002.02');
-
-    var CstmrDrctDbtInitn = root.ele('CstmrDrctDbtInitn');
-    var GrpHdr = CstmrDrctDbtInitn.ele('GrpHdr');
-    GrpHdr.ele('MsgId', "CLUBSEPA 1.0 " + creationDate);
-    GrpHdr.ele('CreDtTm', creationDate);
-    GrpHdr.ele('NbOfTxs', numValidBills);
-    var InitgPty = GrpHdr.ele('InitgPty');
-    InitgPty.ele('Nm', billSpec['accountName']);
-    var PmtInf = CstmrDrctDbtInitn.ele('PmtInf');
-    PmtInf.ele('PmtInfId', generateRandomString(20)); // just a unique id
-    PmtInf.ele('PmtMtd', 'DD');
-    PmtInf.ele('NbOfTxs', numValidBills);
-    PmtInf.ele('CtrlSum', transformAmount(chkSum));
-    var PmtTpInf = PmtInf.ele('PmtTpInf');
-    var SvcLvl = PmtTpInf.ele('SvcLvl');
-    SvcLvl.ele('Cd', 'SEPA');
-    var LclInstrm = PmtTpInf.ele('LclInstrm');
-    LclInstrm.ele('Cd', 'CORE');
-    PmtTpInf.ele('SeqTp', 'FRST');
-    var ReqdColltnDt = PmtInf.ele('ReqdColltnDt', dateStr);
-    var Cdtr = PmtInf.ele('Cdtr');
-    Cdtr.ele('Nm', billSpec['accountName']);
-    var CdtrAcct = PmtInf.ele('CdtrAcct');
-    var Id = CdtrAcct.ele('Id');
-    Id.ele('IBAN', transformIban(billSpec['iban']));
-    var CdtrAgt = PmtInf.ele('CdtrAgt');
-    var FinInstnId = CdtrAgt.ele('FinInstnId');
-    FinInstnId.ele('BIC', billSpec['bic']);
-    PmtInf.ele('ChrgBr', 'SLEV');
-
-    var cdtrSchmeId = PmtInf.ele('CdtrSchmeId');
-    var id = cdtrSchmeId.ele('Id');
-    var prvtId = id.ele('PrvtId');
-    var othr = prvtId.ele('Othr');
-    othr.ele('Id', billSpec['gleaubigerId']);
-    var schmeNm = othr.ele('SchmeNm');
-    schmeNm.ele('Prtry', 'SEPA');
-
     var invalidBills = [];
     for(var i = 0; i < billList.length; i++) {
         var validityCheck = isValidBill(billList[i]);
@@ -200,11 +148,11 @@ const createSepaFiles = async (folderPath, billSpec, billList) => {
                 iban: validityCheck.iban ? "ok" : "bad",
                 bic: validityCheck.bic ? "ok" : "bad",
             });
-            continue;
         }
-        addPaymentInfo(PmtInf, billSpec, billList[i]);
     }
-    
+
+    // replace test by the spec to generate
+    var root = sepaFactory.getSepaGenerator("008.002.02").generate(billSpec, billList);
     var xmlString = root.end({ pretty: true});
     // Assuming folderPath is a string representing the directory where you want to save the file
     var filePath = path.join(folderPath, 'sepa.xml');
@@ -215,151 +163,52 @@ const createSepaFiles = async (folderPath, billSpec, billList) => {
         fs.writeFileSync(invalidBillsPath, JSON.stringify(invalidBills, null, 2));
     }
 
-    // TODO test sepa file
-    //var sepaValidity = checkSepaValidity(filePath);
-    //return sepaValidity;
-}
-
-/*
-Needs bill to have the following components:
-- id: string
-- amount: number
-- mandateId: string
-- date: string
-- bic: string
-- debitor: string
-- iban: string
-- purpose: string
-*/
-const addPaymentInfo = function(paymentRoot, billSpec, bill) {
-    var DrctDbtTxInf = paymentRoot.ele('DrctDbtTxInf');
-    
-    var PmtId = DrctDbtTxInf.ele('PmtId');
-    PmtId.ele('EndToEndId', generateRandomString(25)); // bill['id']
-    
-    var InstdAmt = DrctDbtTxInf.ele('InstdAmt', transformAmount(bill['amount']));
-    InstdAmt.att('Ccy', 'EUR');
-
-    var DrctDbtTx = DrctDbtTxInf.ele('DrctDbtTx');
-    var MndtRltdInf = DrctDbtTx.ele('MndtRltdInf');
-    MndtRltdInf.ele('MndtId', bill['mandateId']);
-    MndtRltdInf.ele('DtOfSgntr', bill['date']);
-
-    var dbtAgent = DrctDbtTxInf.ele('DbtrAgt');
-    var dbtFinInstnId = dbtAgent.ele('FinInstnId');
-    dbtFinInstnId.ele('BIC', bill['bic']);
-
-    var dbt = DrctDbtTxInf.ele('Dbtr');
-    dbt.ele('Nm', bill['debitor']);
-
-    var dbtAcct = DrctDbtTxInf.ele('DbtrAcct');
-    var dbtId = dbtAcct.ele('Id');
-    dbtId.ele('IBAN', transformIban(bill['iban']));
-
-    var RmtInf = DrctDbtTxInf.ele('RmtInf');
-    RmtInf.ele('Ustrd', bill['purpose']);
-
-    return bill['amount'];
-}
-
-function generateRandomString(length) {
-    var chars = 'abcdefghijklmnopqrstuvwxyz0123456789';
-    var result = '';
-    for (var i = 0; i < length; i++) {
-        result += chars[Math.floor(Math.random() * chars.length)];
-    }
-    return result;
+    // test sepa file
+    var sepaValidity = await checkSepaValidity(filePath);
+    return sepaValidity;
 }
 
 const formatTaxRate = (taxrate) => {
     return (taxrate*100).toFixed(0) + " %";
 }
 
-const transformAmount = (amount) => {
-    return (amount/100).toFixed(2);
-}
+async function validateXmlAgainstXsd(xsdPath, xmlPath) {
+    const xsdFileName = path.basename(xsdPath);
 
-const transformIban = (iban) => {
-    // remove everything that is not a number or a letter
-    return iban.replace(/[^a-zA-Z0-9]/g, '').toUpperCase();
-}
-
-function isValidBill(bill) {
-    return {
-        result: isValidIban(bill.iban) && isValidBic(bill.bic),
-        iban: isValidIban(bill.iban),
-        bic: isValidBic(bill.bic)
-    }
-}
-
-function isValidIban(iban) {
-    var ibanRegex = /^([A-Z]{2})(\d{2})([A-Z\d]{1,30})$/;
-    var match = iban.match(ibanRegex);
-    if (match) {
-        var country = match[1];
-        var checksum = match[2];
-        var bban = match[3];
-        var numericIban = (bban + country + checksum).toUpperCase();
-        numericIban = numericIban.replace(/[A-Z]/g, function(letter) {
-            return letter.charCodeAt(0) - 55;
-        });
-        var remainder = BigInt(numericIban) % 97n;
-        return remainder === 1n;
-    } else {
-        return false;
-    }
-}
-
-function isValidBic(bic) {
-    var bicRegex = /^[A-Z]{6}[A-Z0-9]{2}([A-Z0-9]{3})?$/;
-    return bicRegex.test(bic);
-}
-
-function validateXmlAgainstXsd(xsdPath, xmlPath) {
     try {
-        // Load the XSD schema file
-        const xsdContent = fs.readFileSync(xsdPath, 'utf8');
-        const xsdDoc = libxmljs.parseXml(xsdContent);
-
-        // Load the XML file
         const xmlContent = fs.readFileSync(xmlPath, 'utf8');
-        const xmlDoc = libxmljs.parseXml(xmlContent);
 
+        var rslt =  await validator.validateXML(xmlContent, xsdPath);
+        
         // Validate XML against XSD
-        const isValid = xmlDoc.validate(xsdDoc);
-
-        // Check validation result
+        const isValid = rslt.valid;
         if (isValid) {
             return {
                 valid: true,
-                schema: xsdPath
+                schema: xsdFileName,
+                result: rslt.result,
+                errors: []
             };
         } else {
-            // errorlist = [];
-            // xmlDoc.validationErrors.forEach((error, index) => {
-            //     console.error(`Error ${index + 1}:`);
-            //     console.error(` - Line: ${error.line}`);
-            //     console.error(` - Column: ${error.column}`);
-            //     console.error(` - Message: ${error.message}`);
-            // });
             return {
                 valid: false,
-                schema: xsdPath,
-                errors: xmlDoc.validationErrors
+                schema: xsdFileName,
+                result: rslt.result,
+                errors: rslt.messages
             };
         }
     } catch (error) {
+        // console.log(error);
         return {
             valid: false,
-            schema: xsdPath,
-            errors: [
-                { line: 0, column: 0, message: 'An error occurred while validating the XML file:' + error.message }
-            ]
+            schema: xsdFileName,
+            result: error.result,
+            errors: error.messages
         };
     }
 }
 
-function checkSepaValidity(sepaPath) {
+async function checkSepaValidity(sepaPath) {
     const xsdList = [
         '001.001.03',
         '001.003.03',
@@ -371,16 +220,19 @@ function checkSepaValidity(sepaPath) {
     ];
     var results = [];
     var anyValid = false;
+    var validSchema = null;
     for(const xsd of xsdList) {
         const xsdPath = path.join(__dirname, '..', 'schemas', `pain.${xsd}.xsd`);
-        const result = validateXmlAgainstXsd(xsdPath, sepaPath);
+        const result = await validateXmlAgainstXsd(xsdPath, sepaPath);
         if (result.valid) {
             anyValid = true;
+            validSchema = result.schema;
         }
         results.push(result);
     }
     return {
         valid: anyValid,
+        schema: validSchema,
         results: results
     };
 }

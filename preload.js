@@ -17,7 +17,7 @@ contextBridge.exposeInMainWorld('storage', {
 
 contextBridge.exposeInMainWorld('fileselect',
   {
-    buttonTest: () => ipcRenderer.invoke('selectExcelFile') 
+    selectExcel: () => ipcRenderer.invoke('selectExcelFile') 
   })
 
 

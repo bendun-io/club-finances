@@ -9,14 +9,11 @@ let theSettings = null;
 window.init = () => {
     document.getElementById('createBill').addEventListener('click', createBill);
 
-    //document.getElementById('billingExcel').addEventListener('change', 
-    //    (event) => { onFileChange(event, storeBillData);  });
-
     document.getElementById('bankAccount').addEventListener('change', function(event) {
         selectedBankAccount = bankAccountMapping[event.target.value];
     });
 
-    document.getElementById('buttonTest').addEventListener('click', buttonTest);
+    document.getElementById('fileButton').addEventListener('click', fileButtonClicked);
 
     // for every bankaccount in the settings add a selection in bankAccount select
     window.storage.loadSettings().then(
@@ -37,11 +34,11 @@ window.init = () => {
     );
 }
 
-const buttonTest = () => {
-    window.fileselect.buttonTest().then(
+const fileButtonClicked = () => {
+    window.fileselect.selectExcel().then(
         (data) => {
             console.log(data);
-            document.getElementById('buttonTestContent').innerHTML = data.filePaths[0].split('/').pop();
+            document.getElementById('fileButtonContent').innerHTML = data.filePaths[0].split('/').pop();
             onFileChange(data.filePaths[0], storeBillData);
         });
 }
@@ -143,8 +140,14 @@ const createPdfAndSepa = async (folderPath) => {
     }
 
     updateCurrentTask("Erstelle SEPA Datei(en)");
-    await storage.createSepaFiles(folderPath, billMetaData, bills);
+    var sepaRslt = await storage.createSepaFiles(folderPath, billMetaData, bills);
+    console.log(sepaRslt);
     finishTask();
+    var message = "SEPA getested. KEIN valides Format!";
+    if(sepaRslt.valid) {
+        message = "SEPA getestet und hat Format: " + sepaRslt.schema;
+    }
+    finishTask(message);
 
     removeCurrentTask();
 }

@@ -152,7 +152,7 @@ const createSepaFiles = async (folderPath, billSpec, billList) => {
     }
 
     // replace test by the spec to generate
-    var root = sepaFactory.getSepaGenerator("008.002.02").generate(billSpec, billList);
+    var root = sepaFactory.getSepaGenerator("008.001.02").generate(billSpec, billList);
     var xmlString = root.end({ pretty: true});
     // Assuming folderPath is a string representing the directory where you want to save the file
     var filePath = path.join(folderPath, 'sepa.xml');

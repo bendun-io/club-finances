@@ -44,7 +44,7 @@ const generate = (billSpec, billList) => {
     var LclInstrm = PmtTpInf.ele('LclInstrm');
     LclInstrm.ele('Cd', 'CORE');
     PmtTpInf.ele('SeqTp', 'FRST');
-    var ReqdColltnDt = PmtInf.ele('ReqdColltnDt', dateStr);
+    PmtInf.ele('ReqdColltnDt', dateStr);
     var Cdtr = PmtInf.ele('Cdtr');
     Cdtr.ele('Nm', billSpec['accountName']);
     var CdtrAcct = PmtInf.ele('CdtrAcct');
